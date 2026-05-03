@@ -1,0 +1,1333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Gestor de Ideas Inteligente - Captura tus ideas con voz y IA">
+    <meta name="color-scheme" content="light">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Ideas">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Gestor de Ideas">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="msapplication-config" content="none">
+    <meta name="msapplication-TileColor" content="#006B7E">
+    <title>Gestor de Ideas Inteligente</title>
+
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27100%27%20height=%27100%27/%3E%3Ctext%20x=%2750%27%20y=%2775%27%20font-size=%2780%27%20text-anchor=%27middle%27%20fill=%27white%27%3E%F0%9F%92%A1%3C/text%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20180%20180%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27180%27%20height=%27180%27/%3E%3Ctext%20x=%2790%27%20y=%27135%27%20font-size=%27120%27%20text-anchor=%27middle%27%20fill=%27white%27%3E%F0%9F%92%A1%3C/text%3E%3C/svg%3E">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #006B7E;
+            --primary-dark: #005A6B;
+            --secondary: #6B8A94;
+            --tertiary: #5B4F8B;
+            --neutral: #7A7A7A;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --text: #374151;
+            --text-light: #6b7280;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff !important;
+            color: var(--text);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f3f4f6 !important;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            animation: slideDown 0.6s ease;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 24px 20px 20px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--primary);
+        }
+
+        header h1 {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #000000;
+        }
+
+        header p {
+            font-size: 1em;
+            margin-bottom: 15px;
+            color: #111111;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .header-btn {
+            padding: 10px 16px;
+            background: var(--primary);
+            color: white;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .header-btn:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .header-btn.outline {
+            background: transparent;
+            color: var(--primary);
+        }
+
+        .header-btn.outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 24px;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 16px;
+            font-size: 1.3em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card h2::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--dark);
+            font-size: 0.95em;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            color: var(--text);
+            background-color: #ffffff;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(0, 107, 126, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 107, 126, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--light);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-mic {
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #006B7E, #5B4F8B);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .btn-mic:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 107, 126, 0.3);
+        }
+
+        .btn-mic.recording {
+            animation: pulse-mic 1s infinite;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+
+        @keyframes pulse-mic {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
+        .voice-status {
+            font-size: 0.85em;
+            margin-top: 4px;
+            color: white;
+            min-height: 18px;
+            background: rgba(0, 107, 126, 0.9);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .voice-status.listening {
+            color: #ffffff;
+            font-weight: 600;
+            background: rgba(0, 107, 126, 0.95);
+        }
+
+        .voice-status.error {
+            color: #ffffff;
+            background: rgba(239, 68, 68, 0.95);
+        }
+
+        .voice-status.success {
+            color: #ffffff;
+            background: rgba(16, 185, 129, 0.95);
+        }
+
+        .ideas-list {
+            max-height: 600px;
+            overflow-y: auto;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+        }
+
+        .idea-item {
+            background: var(--light);
+            border-left: 4px solid var(--primary);
+            padding: 12px;
+            margin-bottom: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        .idea-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateX(4px);
+        }
+
+        .idea-item.high { border-left-color: var(--danger); }
+        .idea-item.medium { border-left-color: var(--warning); }
+        .idea-item.low { border-left-color: var(--secondary); }
+
+        .idea-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .idea-title {
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+
+        .idea-badges {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75em;
+            font-weight: 600;
+            background: white;
+            border: 1px solid var(--border);
+        }
+
+        .badge.type-app { background: rgba(0,107,126,0.1); color: var(--primary); border-color: var(--primary); }
+        .badge.type-feature { background: rgba(91,79,139,0.1); color: var(--tertiary); border-color: var(--tertiary); }
+        .badge.type-improvement { background: rgba(107,138,148,0.1); color: var(--secondary); border-color: var(--secondary); }
+        .badge.type-research { background: rgba(123,122,122,0.1); color: var(--neutral); border-color: var(--neutral); }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 640px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            header h1 { font-size: 1.8em; }
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #006B7E, #5B4F8B);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9em;
+            margin-top: 8px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-light);
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .idea-detail {
+            margin: 16px 0;
+            padding: 12px;
+            background: var(--light);
+            border-radius: 6px;
+        }
+
+        .idea-detail label {
+            color: var(--text-light);
+            font-size: 0.85em;
+        }
+
+        .idea-detail-value {
+            color: var(--dark);
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .ai-insights {
+            background: linear-gradient(135deg, rgba(0,107,126,0.05), rgba(91,79,139,0.05));
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .ai-insights h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .ai-insights p {
+            color: var(--text);
+            line-height: 1.5;
+            font-size: 0.95em;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #006B7E, #5B4F8B);
+            transition: width 0.3s ease;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 10px 16px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            bottom: -2px;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-light);
+        }
+
+        .offline-banner {
+            display: none;
+            background: var(--warning);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: 600;
+            border-radius: 6px;
+            margin-bottom: 16px;
+        }
+
+        .offline-banner.show { display: block; }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--light); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="offlineBanner" class="offline-banner">
+            Modo offline activado - Los datos se guardan localmente
+        </div>
+
+        <header>
+            <h1 id="appTitle">Gestor de Ideas Inteligente</h1>
+            <p id="appDescription">Captura, clasifica y monitorea tus ideas con IA automática</p>
+            <div class="header-buttons">
+                <button class="header-btn outline" onclick="openEditHeaderModal()">Editar Titulo</button>
+                <button class="header-btn outline" onclick="checkMicrophonePermission()">Verificar Microfono</button>
+                <button class="header-btn" onclick="installApp()">Instalar App</button>
+            </div>
+        </header>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalIdeas">0</div>
+                <div class="stat-label">Ideas Totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalHigh">0</div>
+                <div class="stat-label">Alta Prioridad</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalInProgress">0</div>
+                <div class="stat-label">En Progreso</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalCompleted">0</div>
+                <div class="stat-label">Completadas</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="card">
+                <h2>Distribucion por Tipo</h2>
+                <div class="chart-container">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Distribucion por Estado</h2>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-grid">
+            <!-- Add Idea Form -->
+            <div class="card">
+                <h2>Agregar Nueva Idea</h2>
+                <form id="ideaForm">
+                    <div class="form-group">
+                        <label for="ideaTitle">Titulo de la Idea *</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="ideaTitle" placeholder="Ej: Aplicacion de gestion de tareas" required>
+                            <button type="button" class="btn-mic" onclick="startVoiceInput('ideaTitle')" id="btnStartTitle">
+                                Iniciar
+                            </button>
+                            <button type="button" class="btn-mic" onclick="stopVoiceInput('ideaTitle')" id="btnStopTitle" style="display: none;">
+                                Parar
+                            </button>
+                        </div>
+                        <div id="ideaTitleStatus" class="voice-status"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaDesc">Descripcion *</label>
+                        <textarea id="ideaDesc" placeholder="Describe tu idea en detalle..." required></textarea>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                            <button type="button" class="btn-mic" onclick="startVoiceInput('ideaDesc')" id="btnStartDesc">
+                                Iniciar
+                            </button>
+                            <button type="button" class="btn-mic" onclick="stopVoiceInput('ideaDesc')" id="btnStopDesc" style="display: none;">
+                                Parar
+                            </button>
+                        </div>
+                        <div id="ideaDescStatus" class="voice-status"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaType">Tipo de Idea *</label>
+                        <select id="ideaType" required>
+                            <option value="">Selecciona un tipo</option>
+                            <option value="app">Aplicacion</option>
+                            <option value="feature">Feature/Mejora</option>
+                            <option value="improvement">Optimizacion</option>
+                            <option value="research">Investigacion</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaPriority">Prioridad *</label>
+                        <select id="ideaPriority" required>
+                            <option value="">Selecciona prioridad</option>
+                            <option value="high">Alta</option>
+                            <option value="medium">Media</option>
+                            <option value="low">Baja</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaStatus">Estado *</label>
+                        <select id="ideaStatus" required>
+                            <option value="idea">Idea</option>
+                            <option value="in-progress">En Progreso</option>
+                            <option value="completed">Completada</option>
+                            <option value="on-hold">En Pausa</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Agregar Idea</button>
+                        <button type="reset" class="btn-secondary">Limpiar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Ideas List -->
+            <div class="card">
+                <h2>Mis Ideas</h2>
+
+                <div class="tabs">
+                    <button class="tab active" data-filter="all">Todas</button>
+                    <button class="tab" data-filter="high">Alta</button>
+                    <button class="tab" data-filter="medium">Media</button>
+                    <button class="tab" data-filter="low">Baja</button>
+                </div>
+
+                <div id="ideasList" class="ideas-list">
+                    <div class="empty-state">
+                        <div style="font-size: 3em; margin-bottom: 12px;">💭</div>
+                        <p>No hay ideas aun. ¡Crea tu primera idea!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Detalle de Idea</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
+    <!-- Edit Header Modal -->
+    <div id="editHeaderModal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3>Editar Titulo y Descripcion</h3>
+                <button class="close-btn" onclick="closeEditHeaderModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="editTitleInput">Titulo de la Aplicacion</label>
+                <input type="text" id="editTitleInput" placeholder="Ej: Mi Gestor de Ideas">
+            </div>
+            <div class="form-group">
+                <label for="editDescInput">Descripcion</label>
+                <textarea id="editDescInput" placeholder="Descripcion de la aplicacion..." style="min-height: 80px;"></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="saveHeaderChanges()">Guardar</button>
+                <button class="btn-secondary" onclick="closeEditHeaderModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SERVICE WORKER ====================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(() => {
+                    console.log('Service Worker registrado');
+                }).catch((err) => {
+                    console.log('Service Worker error:', err);
+                });
+            });
+        }
+
+        // ==================== APP LOGIC ====================
+        let ideas = JSON.parse(localStorage.getItem('ideas')) || [];
+        let charts = { type: null, status: null };
+        let currentFilter = 'all';
+        let voiceRecognition = null;
+        let currentVoiceField = null;
+        let transcriptBuffer = '';
+        let processedFinalCount = 0;
+        let isRecordingActive = false;
+        let deferredPrompt = null;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.lang = 'es-ES';
+            voiceRecognition.continuous = true;
+            voiceRecognition.interimResults = true;
+
+            voiceRecognition.onstart = () => {
+                console.log('Grabacion iniciada');
+                transcriptBuffer = '';
+                processedFinalCount = 0;
+                isRecordingActive = true;
+            };
+
+            voiceRecognition.onresult = (event) => {
+                let newFinalText = '';
+                let interimTranscript = '';
+
+                // Usamos processedFinalCount para evitar reprocesar resultados ya confirmados.
+                // En Android, event.resultIndex puede reiniciarse a 0 causando duplicados.
+                for (let i = processedFinalCount; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        newFinalText += transcript + ' ';
+                        processedFinalCount = i + 1;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (newFinalText.trim()) {
+                    transcriptBuffer += newFinalText;
+                }
+
+                const statusEl = document.getElementById(currentVoiceField + 'Status');
+                if (statusEl) {
+                    const displayText = transcriptBuffer + interimTranscript;
+                    statusEl.textContent = (displayText.trim() ? 'Escuchando: ' + displayText : 'Escuchando...');
+                }
+            };
+
+            voiceRecognition.onerror = (event) => {
+                console.error('Error de voz:', event.error);
+                isRecordingActive = false;
+
+                const fieldKey = currentVoiceField;
+                const statusEl = document.getElementById(fieldKey + 'Status');
+                const isTitle = fieldKey === 'ideaTitle';
+                const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
+                const stopBtn = document.getElementById('btnStop' + (isTitle ? 'Title' : 'Desc'));
+
+                if (statusEl) {
+                    statusEl.textContent = 'Error: ' + event.error;
+                    statusEl.classList.remove('listening');
+                    statusEl.classList.add('error');
+                }
+                if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.classList.remove('recording'); }
+                if (startBtn) { startBtn.style.display = 'block'; }
+
+                setTimeout(() => {
+                    if (statusEl) { statusEl.textContent = ''; statusEl.classList.remove('error'); }
+                }, 3000);
+            };
+
+            voiceRecognition.onend = () => {
+                console.log('onend - buffer:', transcriptBuffer, 'campo:', currentVoiceField, 'activo:', isRecordingActive);
+                isRecordingActive = false;
+
+                if (!currentVoiceField) return;
+
+                const fieldKey = currentVoiceField;
+                const field = document.getElementById(fieldKey);
+                const statusEl = document.getElementById(fieldKey + 'Status');
+                const isTitle = fieldKey === 'ideaTitle';
+                const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
+                const stopBtn = document.getElementById('btnStop' + (isTitle ? 'Title' : 'Desc'));
+
+                if (field && transcriptBuffer.trim()) {
+                    const texto = transcriptBuffer.trim();
+                    if (field.value && !field.value.endsWith(' ')) {
+                        field.value += ' ' + texto;
+                    } else {
+                        field.value += texto;
+                    }
+                    if (statusEl) {
+                        statusEl.textContent = 'Capturado: ' + texto;
+                        statusEl.classList.add('success');
+                        statusEl.classList.remove('listening');
+                    }
+                } else if (field) {
+                    if (statusEl) { statusEl.textContent = 'No se detecto voz'; statusEl.classList.remove('listening'); }
+                }
+
+                if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.classList.remove('recording'); }
+                if (startBtn) { startBtn.style.display = 'block'; }
+
+                setTimeout(() => {
+                    if (statusEl) { statusEl.textContent = ''; statusEl.classList.remove('success'); }
+                }, 2000);
+
+                currentVoiceField = null;
+                transcriptBuffer = '';
+                processedFinalCount = 0;
+            };
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHeaderCustomization();
+            setupEventListeners();
+            renderIdeas();
+            updateDashboard();
+            initCharts();
+            checkOnlineStatus();
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const installBtn = document.querySelector('.header-btn[onclick*="installApp"]');
+                if (installBtn) installBtn.style.display = 'block';
+            }, { once: false });
+
+            window.addEventListener('appinstalled', () => {
+                alert('App instalada correctamente en tu dispositivo!');
+                deferredPrompt = null;
+            }, { once: true });
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById('offlineBanner').classList.remove('show');
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineBanner').classList.add('show');
+        });
+
+        function checkOnlineStatus() {
+            if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+        }
+
+        function loadHeaderCustomization() {
+            const savedTitle = localStorage.getItem('appTitle');
+            const savedDesc = localStorage.getItem('appDescription');
+            if (savedTitle) document.getElementById('appTitle').textContent = savedTitle;
+            if (savedDesc) document.getElementById('appDescription').textContent = savedDesc;
+        }
+
+        function openEditHeaderModal() {
+            document.getElementById('editTitleInput').value = document.getElementById('appTitle').textContent;
+            document.getElementById('editDescInput').value = document.getElementById('appDescription').textContent;
+            document.getElementById('editHeaderModal').classList.add('active');
+        }
+
+        function closeEditHeaderModal() {
+            document.getElementById('editHeaderModal').classList.remove('active');
+        }
+
+        function saveHeaderChanges() {
+            const newTitle = document.getElementById('editTitleInput').value.trim();
+            const newDesc = document.getElementById('editDescInput').value.trim();
+            if (newTitle) {
+                document.getElementById('appTitle').textContent = newTitle;
+                localStorage.setItem('appTitle', newTitle);
+            }
+            if (newDesc) {
+                document.getElementById('appDescription').textContent = newDesc;
+                localStorage.setItem('appDescription', newDesc);
+            }
+            closeEditHeaderModal();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('ideaForm').addEventListener('submit', handleAddIdea);
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderIdeas();
+                });
+            });
+
+            document.getElementById('detailModal').addEventListener('click', (e) => {
+                if (e.target.id === 'detailModal') closeModal();
+            });
+
+            document.getElementById('editHeaderModal').addEventListener('click', (e) => {
+                if (e.target.id === 'editHeaderModal') closeEditHeaderModal();
+            });
+        }
+
+        function startVoiceInput(fieldId) {
+            if (!voiceRecognition) {
+                alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.');
+                return;
+            }
+
+            if (isRecordingActive) {
+                console.log('Ya hay una grabacion activa');
+                return;
+            }
+
+            currentVoiceField = fieldId;
+            transcriptBuffer = '';
+            processedFinalCount = 0;
+
+            const isTitle = fieldId === 'ideaTitle';
+            const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
+            const stopBtn = document.getElementById('btnStop' + (isTitle ? 'Title' : 'Desc'));
+            const statusEl = document.getElementById(fieldId + 'Status');
+
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) { stopBtn.style.display = 'block'; stopBtn.classList.add('recording'); }
+            if (statusEl) {
+                statusEl.textContent = 'Escuchando...';
+                statusEl.classList.add('listening');
+                statusEl.classList.remove('error', 'success');
+            }
+
+            try {
+                voiceRecognition.start();
+            } catch (e) {
+                console.error('Error al iniciar:', e);
+                if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+                if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.classList.remove('recording'); }
+                if (startBtn) startBtn.style.display = 'block';
+            }
+        }
+
+        function stopVoiceInput(fieldId) {
+            if (!voiceRecognition || !isRecordingActive) return;
+            console.log('Deteniendo grabacion para:', fieldId);
+            voiceRecognition.stop();
+        }
+
+        function checkMicrophonePermission() {
+            if (!navigator.mediaDevices?.getUserMedia) {
+                alert('Tu navegador no soporta acceso al microfono. Usa Chrome o Edge.');
+                return;
+            }
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(() => { alert('Microfono permitido! Ahora puedes usar la funcion de voz.'); })
+                .catch((err) => {
+                    if (err.name === 'NotAllowedError') {
+                        alert('Permiso de microfono denegado.\n\nAndroid: Ajustes > Aplicaciones > Chrome > Permisos > Microfono > Permitir');
+                    } else {
+                        alert('Error: ' + err.message);
+                    }
+                });
+        }
+
+        function installApp() {
+            if (!deferredPrompt) {
+                alert('Para instalar esta app:\n\n1. Abre el menu (tres puntos) en Chrome\n2. Toca "Instalar aplicacion"\n\nO si ya esta instalada, aparecera en tu pantalla de inicio.');
+                return;
+            }
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    alert('Instalacion iniciada!');
+                }
+                deferredPrompt = null;
+            }).catch((err) => { console.error('Error durante instalacion:', err); });
+        }
+
+        async function handleAddIdea(e) {
+            e.preventDefault();
+
+            const idea = {
+                id: Date.now(),
+                title: document.getElementById('ideaTitle').value,
+                description: document.getElementById('ideaDesc').value,
+                type: document.getElementById('ideaType').value,
+                priority: document.getElementById('ideaPriority').value,
+                status: document.getElementById('ideaStatus').value,
+                createdAt: new Date().toISOString(),
+                aiInsights: null,
+                progress: 0
+            };
+
+            if (navigator.onLine) {
+                idea.aiInsights = await generateAIInsights(idea);
+            }
+
+            ideas.push(idea);
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+
+            document.getElementById('ideaForm').reset();
+            renderIdeas();
+            updateDashboard();
+        }
+
+        async function generateAIInsights(idea) {
+            try {
+                const response = await fetch("https://api.anthropic.com/v1/messages", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        model: "claude-sonnet-4-20250514",
+                        max_tokens: 300,
+                        messages: [{
+                            role: "user",
+                            content: `Analiza esta idea brevemente (2-3 oraciones):\n\nTitulo: ${idea.title}\nTipo: ${idea.type}\nDescripcion: ${idea.description}\n\nProporciona: viabilidad, proximo paso, tecnologia.\nResponde en espanol.`
+                        }]
+                    })
+                });
+                const data = await response.json();
+                if (data.content?.[0]) return data.content[0].text;
+            } catch (error) {
+                console.error('Error AI:', error);
+            }
+            return null;
+        }
+
+        function renderIdeas() {
+            const listContainer = document.getElementById('ideasList');
+            let filtered = ideas;
+
+            if (currentFilter !== 'all') {
+                filtered = ideas.filter(idea => idea.priority === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                listContainer.innerHTML = `<div class="empty-state"><div style="font-size: 3em; margin-bottom: 12px;">💭</div><p>No hay ideas con este filtro</p></div>`;
+                return;
+            }
+
+            listContainer.innerHTML = filtered.map(idea => `
+                <div class="idea-item ${idea.priority}" onclick="openModal(${idea.id})">
+                    <div class="idea-header">
+                        <div style="flex: 1;">
+                            <div class="idea-title">${idea.title}</div>
+                            <div class="idea-badges">
+                                <span class="badge type-${idea.type}">${formatType(idea.type)}</span>
+                                <span class="badge">${formatPriority(idea.priority)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; color: var(--text-light); font-size: 0.9em;">
+                        ${idea.description.substring(0, 80)}...
+                    </div>
+                    ${idea.status !== 'completed' ? `<div class="progress-bar"><div class="progress-fill" style="width: ${idea.progress}%"></div></div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        function openModal(ideaId) {
+            const idea = ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            const modalBody = document.getElementById('modalBody');
+            modalBody.innerHTML = `
+                <div class="idea-detail">
+                    <label>Titulo</label>
+                    <div class="idea-detail-value">${idea.title}</div>
+                </div>
+                <div class="idea-detail">
+                    <label>Descripcion</label>
+                    <div class="idea-detail-value">${idea.description}</div>
+                </div>
+                <div class="idea-detail">
+                    <label>Informacion</label>
+                    <div class="idea-detail-value">
+                        Tipo: <strong>${formatType(idea.type)}</strong> |
+                        Prioridad: <strong>${formatPriority(idea.priority)}</strong> |
+                        Estado: <strong>${formatStatus(idea.status)}</strong>
+                    </div>
+                </div>
+                <div class="idea-detail">
+                    <label>Progreso</label>
+                    <input type="range" min="0" max="100" value="${idea.progress}"
+                           onchange="updateProgress(${idea.id}, this.value)"
+                           style="width: 100%; padding: 0;">
+                    <div style="text-align: right; font-size: 0.85em; color: var(--text-light); margin-top: 4px;">${idea.progress}%</div>
+                </div>
+                ${idea.aiInsights ? `
+                    <div class="ai-insights">
+                        <h4>Insights de IA</h4>
+                        <p>${idea.aiInsights}</p>
+                    </div>
+                ` : ''}
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Cambiar Estado</label>
+                    <select onchange="updateStatus(${idea.id}, this.value)" style="width: 100%;">
+                        <option value="idea" ${idea.status === 'idea' ? 'selected' : ''}>Idea</option>
+                        <option value="in-progress" ${idea.status === 'in-progress' ? 'selected' : ''}>En Progreso</option>
+                        <option value="on-hold" ${idea.status === 'on-hold' ? 'selected' : ''}>En Pausa</option>
+                        <option value="completed" ${idea.status === 'completed' ? 'selected' : ''}>Completada</option>
+                    </select>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button class="btn-danger" onclick="deleteIdea(${idea.id})">Eliminar Idea</button>
+                </div>
+            `;
+
+            document.getElementById('detailModal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.remove('active');
+        }
+
+        function updateProgress(ideaId, value) {
+            const idea = ideas.find(i => i.id === ideaId);
+            if (idea) {
+                idea.progress = parseInt(value);
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                updateDashboard();
+            }
+        }
+
+        function updateStatus(ideaId, status) {
+            const idea = ideas.find(i => i.id === ideaId);
+            if (idea) {
+                idea.status = status;
+                if (status === 'completed') idea.progress = 100;
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                renderIdeas();
+                updateDashboard();
+            }
+        }
+
+        function deleteIdea(ideaId) {
+            if (confirm('¿Estas seguro de que deseas eliminar esta idea?')) {
+                ideas = ideas.filter(i => i.id !== ideaId);
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                closeModal();
+                renderIdeas();
+                updateDashboard();
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('totalIdeas').textContent = ideas.length;
+            document.getElementById('totalHigh').textContent = ideas.filter(i => i.priority === 'high').length;
+            document.getElementById('totalInProgress').textContent = ideas.filter(i => i.status === 'in-progress').length;
+            document.getElementById('totalCompleted').textContent = ideas.filter(i => i.status === 'completed').length;
+            if (charts.type) updateCharts();
+        }
+
+        function initCharts() {
+            const typeCtx = document.getElementById('typeChart').getContext('2d');
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+
+            charts.type = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Aplicacion', 'Feature', 'Optimizacion', 'Investigacion'],
+                    datasets: [{
+                        data: [
+                            ideas.filter(i => i.type === 'app').length,
+                            ideas.filter(i => i.type === 'feature').length,
+                            ideas.filter(i => i.type === 'improvement').length,
+                            ideas.filter(i => i.type === 'research').length
+                        ],
+                        backgroundColor: ['#006B7E', '#5B4F8B', '#6B8A94', '#7A7A7A'],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } } }
+                }
+            });
+
+            charts.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Idea', 'En Progreso', 'En Pausa', 'Completada'],
+                    datasets: [{
+                        data: [
+                            ideas.filter(i => i.status === 'idea').length,
+                            ideas.filter(i => i.status === 'in-progress').length,
+                            ideas.filter(i => i.status === 'on-hold').length,
+                            ideas.filter(i => i.status === 'completed').length
+                        ],
+                        backgroundColor: ['#5B4F8B', '#f59e0b', '#7A7A7A', '#10b981'],
+                        borderColor: '#fff',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } } }
+                }
+            });
+        }
+
+        function updateCharts() {
+            charts.type.data.datasets[0].data = [
+                ideas.filter(i => i.type === 'app').length,
+                ideas.filter(i => i.type === 'feature').length,
+                ideas.filter(i => i.type === 'improvement').length,
+                ideas.filter(i => i.type === 'research').length
+            ];
+            charts.type.update();
+
+            charts.status.data.datasets[0].data = [
+                ideas.filter(i => i.status === 'idea').length,
+                ideas.filter(i => i.status === 'in-progress').length,
+                ideas.filter(i => i.status === 'on-hold').length,
+                ideas.filter(i => i.status === 'completed').length
+            ];
+            charts.status.update();
+        }
+
+        function formatType(type) {
+            const types = { 'app': 'Aplicacion', 'feature': 'Feature', 'improvement': 'Optimizacion', 'research': 'Investigacion' };
+            return types[type] || type;
+        }
+
+        function formatPriority(priority) {
+            const map = { 'high': 'Alta', 'medium': 'Media', 'low': 'Baja' };
+            return map[priority] || priority;
+        }
+
+        function formatStatus(status) {
+            const map = { 'idea': 'Idea', 'in-progress': 'En Progreso', 'on-hold': 'En Pausa', 'completed': 'Completada' };
+            return map[status] || status;
+        }
+    </script>
+</body>
+</html>
