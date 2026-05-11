@@ -17,10 +17,11 @@
     <title>Gestor de Ideas Inteligente</title>
 
     <link rel="manifest" href="./manifest.json">
-    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27100%27%20height=%27100%27/%3E%3Ctext%20x=%2750%27%20y=%2775%27%20font-size=%2780%27%20text-anchor=%27middle%27%20fill=%27white%27%3E%F0%9F%92%A1%3C/text%3E%3C/svg%3E">
-    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20180%20180%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27180%27%20height=%27180%27/%3E%3Ctext%20x=%2790%27%20y=%27135%27%20font-size=%27120%27%20text-anchor=%27middle%27%20fill=%27white%27%3E%F0%9F%92%A1%3C/text%3E%3C/svg%3E">
+    <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27100%27%20height=%27100%2[...]
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20180%20180%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27180%27%20hei[...]
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="./gemini-config.js"></script>
 
     <style>
         * {
@@ -122,6 +123,24 @@
         .header-btn.outline:hover {
             background: var(--primary);
             color: white;
+        }
+
+        .gemini-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .gemini-status.disconnected {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+            border-color: var(--danger);
         }
 
         .main-grid {
@@ -512,6 +531,26 @@
             font-size: 0.95em;
         }
 
+        .ai-insights.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
         .progress-bar {
             width: 100%;
             height: 6px;
@@ -571,6 +610,104 @@
 
         .offline-banner.show { display: block; }
 
+        .ai-section {
+            background: linear-gradient(135deg, rgba(0,107,126,0.05), rgba(91,79,139,0.05));
+            border: 2px solid rgba(0,107,126,0.2);
+            border-radius: 12px;
+            padding: 24px;
+            margin-top: 24px;
+        }
+
+        .ai-section h2 {
+            margin-bottom: 20px;
+        }
+
+        .summary-box {
+            background: white;
+            border-left: 4px solid var(--success);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .summary-box h4 {
+            color: var(--success);
+            margin-bottom: 8px;
+            font-size: 1.1em;
+        }
+
+        .summary-box p {
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .insights-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .insights-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .insight-card {
+            background: white;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .insight-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0, 107, 126, 0.1);
+        }
+
+        .insight-card h4 {
+            color: var(--primary);
+            font-size: 1em;
+            margin-bottom: 8px;
+        }
+
+        .insight-card p {
+            color: var(--text);
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .model-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .model-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .model-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .model-btn:hover {
+            border-color: var(--primary);
+        }
+
         @keyframes slideDown {
             from { opacity: 0; transform: translateY(-20px); }
             to { opacity: 1; transform: translateY(0); }
@@ -611,8 +748,12 @@
         <header>
             <h1 id="appTitle">Gestor de Ideas Inteligente</h1>
             <p id="appDescription">Captura, clasifica y monitorea tus ideas con IA automática</p>
+            <div id="geminiStatusContainer" style="text-align: center; margin-bottom: 10px;">
+                <span id="geminiStatus" class="gemini-status disconnected">Gemini no configurado</span>
+            </div>
             <div class="header-buttons">
                 <button class="header-btn outline" onclick="openEditHeaderModal()">Editar Titulo</button>
+                <button class="header-btn outline" onclick="openGeminiConfigModal()">⚙️ Configurar Gemini</button>
                 <button class="header-btn outline" onclick="checkMicrophonePermission()">Verificar Microfono</button>
                 <button class="header-btn" onclick="installApp()">Instalar App</button>
             </div>
@@ -745,6 +886,40 @@
                 </div>
             </div>
         </div>
+
+        <!-- AI Summary and Insights Section -->
+        <div class="ai-section" id="aiSection" style="display: none;">
+            <h2>📊 Resumen e Insights con IA</h2>
+
+            <div class="model-selector">
+                <button class="model-btn active" data-model="FLASH_LITE" onclick="selectModel('FLASH_LITE')">
+                    ⚡ Gemini 3.1 Flash Lite (Rápido)
+                </button>
+                <button class="model-btn" data-model="PRO" onclick="selectModel('PRO')">
+                    🚀 Gemini 2.5 Pro (Potente)
+                </button>
+            </div>
+
+            <button class="btn-primary" onclick="generateSummaryAndInsights()" style="width: 100%; margin-bottom: 20px;">
+                🤖 Generar Resumen e Insights
+            </button>
+
+            <div id="summaryContainer" style="display: none;">
+                <div class="summary-box">
+                    <h4>📝 Resumen Ejecutivo</h4>
+                    <p id="summaryText"></p>
+                </div>
+
+                <h4 style="margin-top: 20px; color: var(--primary); margin-bottom: 12px;">💡 Insights Clave</h4>
+                <div class="insights-grid" id="insightsContainer">
+                </div>
+            </div>
+
+            <div id="aiLoading" style="display: none; text-align: center; padding: 20px;">
+                <span class="loading-spinner"></span>
+                <span style="color: var(--text-light); font-weight: 600;">Generando análisis con IA...</span>
+            </div>
+        </div>
     </div>
 
     <!-- Detail Modal -->
@@ -780,6 +955,57 @@
         </div>
     </div>
 
+    <!-- Gemini Config Modal -->
+    <div id="geminiConfigModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>⚙️ Configurar Google AI Studio (Gemini)</h3>
+                <button class="close-btn" onclick="closeGeminiConfigModal()">&times;</button>
+            </div>
+
+            <div style="background: rgba(91, 79, 139, 0.1); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="font-size: 0.9em; color: var(--text); line-height: 1.6;">
+                    Para usar Gemini, necesitas una API Key de Google AI Studio.
+                    <br><strong>Obtén tu API Key gratis en:</strong>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary); text-decoration: underline;">
+                        aistudio.google.com/app/apikey
+                    </a>
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="geminiApiKey">API Key de Google AI Studio *</label>
+                <input 
+                    type="password" 
+                    id="geminiApiKey" 
+                    placeholder="Pega tu API Key aquí"
+                    autocomplete="off">
+                <p style="font-size: 0.85em; color: var(--text-light); margin-top: 8px;">
+                    Tu API Key se guardará solo en tu dispositivo de forma segura.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="geminiShowKey" onchange="toggleShowKey()">
+                    Mostrar API Key
+                </label>
+            </div>
+
+            <div id="geminiConfigError" style="display: none; background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9em;"></div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="saveGeminiConfig()">✅ Guardar Configuración</button>
+                <button class="btn-secondary" onclick="closeGeminiConfigModal()">Cancelar</button>
+            </div>
+
+            <div id="geminiConfigured" style="display: none; margin-top: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid var(--success);">
+                <p style="color: var(--success); font-weight: 600; margin-bottom: 12px;">✅ Gemini Configurado Correctamente</p>
+                <button class="btn-danger" onclick="disconnectGemini()">Desconectar Gemini</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== SERVICE WORKER ====================
         if ('serviceWorker' in navigator) {
@@ -802,6 +1028,7 @@
         let processedFinalCount = 0;
         let isRecordingActive = false;
         let deferredPrompt = null;
+        let selectedModel = 'FLASH_LITE';
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -822,8 +1049,6 @@
                 let newFinalText = '';
                 let interimTranscript = '';
 
-                // Usamos processedFinalCount para evitar reprocesar resultados ya confirmados.
-                // En Android, event.resultIndex puede reiniciarse a 0 causando duplicados.
                 for (let i = processedFinalCount; i < event.results.length; i++) {
                     const transcript = event.results[i][0].transcript;
                     if (event.results[i].isFinal) {
@@ -910,6 +1135,202 @@
             };
         }
 
+        // ==================== GEMINI CONFIG ====================
+        function openGeminiConfigModal() {
+            const modal = document.getElementById('geminiConfigModal');
+            const configured = document.getElementById('geminiConfigured');
+            const form = document.querySelector('#geminiConfigModal .form-group');
+
+            if (geminiConfig.isConfigured()) {
+                configured.style.display = 'block';
+                form.parentElement.style.display = 'none';
+            } else {
+                configured.style.display = 'none';
+                form.parentElement.style.display = 'block';
+                document.getElementById('geminiApiKey').value = '';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeGeminiConfigModal() {
+            document.getElementById('geminiConfigModal').classList.remove('active');
+            document.getElementById('geminiConfigError').style.display = 'none';
+        }
+
+        function toggleShowKey() {
+            const input = document.getElementById('geminiApiKey');
+            const checkbox = document.getElementById('geminiShowKey');
+            input.type = checkbox.checked ? 'text' : 'password';
+        }
+
+        async function saveGeminiConfig() {
+            const apiKey = document.getElementById('geminiApiKey').value.trim();
+            const errorDiv = document.getElementById('geminiConfigError');
+
+            if (!apiKey) {
+                errorDiv.textContent = '⚠️ Por favor ingresa tu API Key';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            // Validar API Key
+            const validation = await geminiConfig.validateApiKey(apiKey);
+            if (!validation.valid) {
+                errorDiv.textContent = '❌ ' + validation.error;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Guardar configuración
+            geminiConfig.saveConfig(apiKey);
+            updateGeminiStatus();
+
+            alert('✅ Gemini configurado correctamente');
+            closeGeminiConfigModal();
+        }
+
+        function disconnectGemini() {
+            if (confirm('¿Desconectar Gemini? Tendrás que volver a configurar tu API Key.')) {
+                geminiConfig.clearConfig();
+                updateGeminiStatus();
+                openGeminiConfigModal();
+            }
+        }
+
+        function updateGeminiStatus() {
+            const statusEl = document.getElementById('geminiStatus');
+            const aiSection = document.getElementById('aiSection');
+
+            if (geminiConfig.isConfigured()) {
+                statusEl.textContent = '✅ Gemini Conectado';
+                statusEl.classList.remove('disconnected');
+                statusEl.classList.add('active');
+                aiSection.style.display = 'block';
+            } else {
+                statusEl.textContent = '⚠️ Gemini no configurado';
+                statusEl.classList.add('disconnected');
+                statusEl.classList.remove('active');
+                aiSection.style.display = 'none';
+            }
+        }
+
+        function selectModel(model) {
+            selectedModel = model;
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.model === model) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        async function generateSummaryAndInsights() {
+            if (!geminiConfig.isConfigured()) {
+                alert('⚠️ Primero debes configurar tu API Key de Gemini');
+                openGeminiConfigModal();
+                return;
+            }
+
+            if (ideas.length === 0) {
+                alert('⚠️ No hay ideas para analizar');
+                return;
+            }
+
+            const loadingDiv = document.getElementById('aiLoading');
+            const summaryContainer = document.getElementById('summaryContainer');
+            const apiKey = geminiConfig.getApiKey();
+            const model = geminiConfig.getModelName(selectedModel);
+
+            loadingDiv.style.display = 'block';
+            summaryContainer.style.display = 'none';
+
+            try {
+                // Preparar datos
+                const ideasSummary = ideas.map((idea, idx) => 
+                    `${idx + 1}. ${idea.title} (${idea.type} - ${idea.priority}): ${idea.description}`
+                ).join('\n');
+
+                const prompt = `Analiza las siguientes ideas y proporciona:
+1. Un resumen ejecutivo conciso
+2. 3-4 insights clave sobre las ideas, oportunidades y patrones
+
+IDEAS:
+${ideasSummary}
+
+Responde en formato JSON con la siguiente estructura:
+{
+  "summary": "Resumen ejecutivo...",
+  "insights": [
+    {"title": "Insight 1", "description": "Descripción detallada"},
+    {"title": "Insight 2", "description": "Descripción detallada"},
+    ...
+  ]
+}`;
+
+                const response = await fetch(
+                    `${geminiConfig.API_ENDPOINT}/${model}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: prompt
+                                }]
+                            }],
+                            generationConfig: {
+                                maxOutputTokens: 2000,
+                                temperature: 0.7
+                            }
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Error al conectar con Gemini API');
+                }
+
+                const data = await response.json();
+                const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!content) {
+                    throw new Error('No se recibió respuesta de Gemini');
+                }
+
+                // Parsear JSON
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('Respuesta en formato inválido');
+                }
+
+                const result = JSON.parse(jsonMatch[0]);
+
+                // Mostrar resultados
+                document.getElementById('summaryText').textContent = result.summary;
+
+                const insightsContainer = document.getElementById('insightsContainer');
+                insightsContainer.innerHTML = result.insights.map((insight, idx) => `
+                    <div class="insight-card">
+                        <h4>💡 ${insight.title}</h4>
+                        <p>${insight.description}</p>
+                    </div>
+                `).join('');
+
+                loadingDiv.style.display = 'none';
+                summaryContainer.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                loadingDiv.style.display = 'none';
+                alert('❌ Error al generar análisis: ' + error.message);
+            }
+        }
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadHeaderCustomization();
@@ -918,6 +1339,7 @@
             updateDashboard();
             initCharts();
             checkOnlineStatus();
+            updateGeminiStatus();
 
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
@@ -994,22 +1416,20 @@
             document.getElementById('editHeaderModal').addEventListener('click', (e) => {
                 if (e.target.id === 'editHeaderModal') closeEditHeaderModal();
             });
+
+            document.getElementById('geminiConfigModal').addEventListener('click', (e) => {
+                if (e.target.id === 'geminiConfigModal') closeGeminiConfigModal();
+            });
         }
 
         function startVoiceInput(fieldId) {
             if (!voiceRecognition) {
-                alert('Tu navegador no soporta reconocimiento de voz. Usa Chrome o Edge.');
-                return;
-            }
-
-            if (isRecordingActive) {
-                console.log('Ya hay una grabacion activa');
+                alert('Tu navegador no soporta reconocimiento de voz');
                 return;
             }
 
             currentVoiceField = fieldId;
-            transcriptBuffer = '';
-            processedFinalCount = 0;
+            voiceRecognition.start();
 
             const isTitle = fieldId === 'ideaTitle';
             const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
@@ -1018,59 +1438,16 @@
 
             if (startBtn) startBtn.style.display = 'none';
             if (stopBtn) { stopBtn.style.display = 'block'; stopBtn.classList.add('recording'); }
-            if (statusEl) {
-                statusEl.textContent = 'Escuchando...';
-                statusEl.classList.add('listening');
-                statusEl.classList.remove('error', 'success');
-            }
-
-            try {
-                voiceRecognition.start();
-            } catch (e) {
-                console.error('Error al iniciar:', e);
-                if (statusEl) statusEl.textContent = 'Error: ' + e.message;
-                if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.classList.remove('recording'); }
-                if (startBtn) startBtn.style.display = 'block';
-            }
+            if (statusEl) { statusEl.textContent = 'Escuchando...'; statusEl.classList.add('listening'); }
         }
 
         function stopVoiceInput(fieldId) {
-            if (!voiceRecognition || !isRecordingActive) return;
-            console.log('Deteniendo grabacion para:', fieldId);
-            voiceRecognition.stop();
-        }
-
-        function checkMicrophonePermission() {
-            if (!navigator.mediaDevices?.getUserMedia) {
-                alert('Tu navegador no soporta acceso al microfono. Usa Chrome o Edge.');
-                return;
+            if (voiceRecognition) {
+                voiceRecognition.stop();
             }
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(() => { alert('Microfono permitido! Ahora puedes usar la funcion de voz.'); })
-                .catch((err) => {
-                    if (err.name === 'NotAllowedError') {
-                        alert('Permiso de microfono denegado.\n\nAndroid: Ajustes > Aplicaciones > Chrome > Permisos > Microfono > Permitir');
-                    } else {
-                        alert('Error: ' + err.message);
-                    }
-                });
         }
 
-        function installApp() {
-            if (!deferredPrompt) {
-                alert('Para instalar esta app:\n\n1. Abre el menu (tres puntos) en Chrome\n2. Toca "Instalar aplicacion"\n\nO si ya esta instalada, aparecera en tu pantalla de inicio.');
-                return;
-            }
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    alert('Instalacion iniciada!');
-                }
-                deferredPrompt = null;
-            }).catch((err) => { console.error('Error durante instalacion:', err); });
-        }
-
-        async function handleAddIdea(e) {
+        function handleAddIdea(e) {
             e.preventDefault();
 
             const idea = {
@@ -1080,83 +1457,62 @@
                 type: document.getElementById('ideaType').value,
                 priority: document.getElementById('ideaPriority').value,
                 status: document.getElementById('ideaStatus').value,
-                createdAt: new Date().toISOString(),
-                aiInsights: null,
-                progress: 0
+                createdAt: new Date().toISOString()
             };
-
-            if (navigator.onLine) {
-                idea.aiInsights = await generateAIInsights(idea);
-            }
 
             ideas.push(idea);
             localStorage.setItem('ideas', JSON.stringify(ideas));
 
-            document.getElementById('ideaForm').reset();
+            e.target.reset();
             renderIdeas();
             updateDashboard();
-        }
 
-        async function generateAIInsights(idea) {
-            try {
-                const response = await fetch("https://api.anthropic.com/v1/messages", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                        model: "claude-sonnet-4-20250514",
-                        max_tokens: 300,
-                        messages: [{
-                            role: "user",
-                            content: `Analiza esta idea brevemente (2-3 oraciones):\n\nTitulo: ${idea.title}\nTipo: ${idea.type}\nDescripcion: ${idea.description}\n\nProporciona: viabilidad, proximo paso, tecnologia.\nResponde en espanol.`
-                        }]
-                    })
-                });
-                const data = await response.json();
-                if (data.content?.[0]) return data.content[0].text;
-            } catch (error) {
-                console.error('Error AI:', error);
-            }
-            return null;
+            alert('✅ Idea agregada correctamente');
         }
 
         function renderIdeas() {
-            const listContainer = document.getElementById('ideasList');
+            const list = document.getElementById('ideasList');
             let filtered = ideas;
 
             if (currentFilter !== 'all') {
-                filtered = ideas.filter(idea => idea.priority === currentFilter);
+                filtered = ideas.filter(i => i.priority === currentFilter);
             }
 
             if (filtered.length === 0) {
-                listContainer.innerHTML = `<div class="empty-state"><div style="font-size: 3em; margin-bottom: 12px;">💭</div><p>No hay ideas con este filtro</p></div>`;
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 3em; margin-bottom: 12px;">💭</div>
+                        <p>No hay ideas en esta categoría</p>
+                    </div>
+                `;
                 return;
             }
 
-            listContainer.innerHTML = filtered.map(idea => `
-                <div class="idea-item ${idea.priority}" onclick="openModal(${idea.id})">
+            list.innerHTML = filtered.map(idea => `
+                <div class="idea-item ${idea.priority}" onclick="showIdeaDetail(${idea.id})">
                     <div class="idea-header">
                         <div style="flex: 1;">
                             <div class="idea-title">${idea.title}</div>
                             <div class="idea-badges">
-                                <span class="badge type-${idea.type}">${formatType(idea.type)}</span>
-                                <span class="badge">${formatPriority(idea.priority)}</span>
+                                <span class="badge type-${idea.type}">${idea.type}</span>
+                                <span class="badge">${idea.status}</span>
                             </div>
                         </div>
                     </div>
-                    <div style="margin-top: 8px; color: var(--text-light); font-size: 0.9em;">
-                        ${idea.description.substring(0, 80)}...
-                    </div>
-                    ${idea.status !== 'completed' ? `<div class="progress-bar"><div class="progress-fill" style="width: ${idea.progress}%"></div></div>` : ''}
                 </div>
             `).join('');
         }
 
-        function openModal(ideaId) {
+        function showIdeaDetail(ideaId) {
             const idea = ideas.find(i => i.id === ideaId);
             if (!idea) return;
 
-            const modalBody = document.getElementById('modalBody');
-            modalBody.innerHTML = `
+            const modal = document.getElementById('detailModal');
+            const body = document.getElementById('modalBody');
+
+            const createdDate = new Date(idea.createdAt).toLocaleDateString('es-ES');
+
+            body.innerHTML = `
                 <div class="idea-detail">
                     <label>Titulo</label>
                     <div class="idea-detail-value">${idea.title}</div>
@@ -1166,74 +1522,56 @@
                     <div class="idea-detail-value">${idea.description}</div>
                 </div>
                 <div class="idea-detail">
-                    <label>Informacion</label>
-                    <div class="idea-detail-value">
-                        Tipo: <strong>${formatType(idea.type)}</strong> |
-                        Prioridad: <strong>${formatPriority(idea.priority)}</strong> |
-                        Estado: <strong>${formatStatus(idea.status)}</strong>
-                    </div>
+                    <label>Tipo</label>
+                    <div class="idea-detail-value">${idea.type}</div>
                 </div>
                 <div class="idea-detail">
-                    <label>Progreso</label>
-                    <input type="range" min="0" max="100" value="${idea.progress}"
-                           onchange="updateProgress(${idea.id}, this.value)"
-                           style="width: 100%; padding: 0;">
-                    <div style="text-align: right; font-size: 0.85em; color: var(--text-light); margin-top: 4px;">${idea.progress}%</div>
+                    <label>Prioridad</label>
+                    <div class="idea-detail-value">${idea.priority}</div>
                 </div>
-                ${idea.aiInsights ? `
-                    <div class="ai-insights">
-                        <h4>Insights de IA</h4>
-                        <p>${idea.aiInsights}</p>
-                    </div>
-                ` : ''}
-                <div class="form-group" style="margin-top: 20px;">
-                    <label>Cambiar Estado</label>
-                    <select onchange="updateStatus(${idea.id}, this.value)" style="width: 100%;">
-                        <option value="idea" ${idea.status === 'idea' ? 'selected' : ''}>Idea</option>
-                        <option value="in-progress" ${idea.status === 'in-progress' ? 'selected' : ''}>En Progreso</option>
-                        <option value="on-hold" ${idea.status === 'on-hold' ? 'selected' : ''}>En Pausa</option>
-                        <option value="completed" ${idea.status === 'completed' ? 'selected' : ''}>Completada</option>
-                    </select>
+                <div class="idea-detail">
+                    <label>Estado</label>
+                    <div class="idea-detail-value">${idea.status}</div>
                 </div>
-                <div style="margin-top: 20px;">
-                    <button class="btn-danger" onclick="deleteIdea(${idea.id})">Eliminar Idea</button>
+                <div class="idea-detail">
+                    <label>Creada</label>
+                    <div class="idea-detail-value">${createdDate}</div>
+                </div>
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="editIdea(${idea.id})">Editar</button>
+                    <button class="btn-danger" onclick="deleteIdea(${idea.id})">Eliminar</button>
                 </div>
             `;
 
-            document.getElementById('detailModal').classList.add('active');
+            modal.classList.add('active');
         }
 
         function closeModal() {
             document.getElementById('detailModal').classList.remove('active');
         }
 
-        function updateProgress(ideaId, value) {
+        function editIdea(ideaId) {
             const idea = ideas.find(i => i.id === ideaId);
-            if (idea) {
-                idea.progress = parseInt(value);
-                localStorage.setItem('ideas', JSON.stringify(ideas));
-                updateDashboard();
-            }
-        }
+            if (!idea) return;
 
-        function updateStatus(ideaId, status) {
-            const idea = ideas.find(i => i.id === ideaId);
-            if (idea) {
-                idea.status = status;
-                if (status === 'completed') idea.progress = 100;
-                localStorage.setItem('ideas', JSON.stringify(ideas));
-                renderIdeas();
-                updateDashboard();
-            }
+            document.getElementById('ideaTitle').value = idea.title;
+            document.getElementById('ideaDesc').value = idea.description;
+            document.getElementById('ideaType').value = idea.type;
+            document.getElementById('ideaPriority').value = idea.priority;
+            document.getElementById('ideaStatus').value = idea.status;
+
+            deleteIdea(ideaId);
+            closeModal();
+            document.getElementById('ideaTitle').focus();
         }
 
         function deleteIdea(ideaId) {
-            if (confirm('¿Estas seguro de que deseas eliminar esta idea?')) {
+            if (confirm('¿Eliminar esta idea?')) {
                 ideas = ideas.filter(i => i.id !== ideaId);
                 localStorage.setItem('ideas', JSON.stringify(ideas));
-                closeModal();
                 renderIdeas();
                 updateDashboard();
+                closeModal();
             }
         }
 
@@ -1242,91 +1580,116 @@
             document.getElementById('totalHigh').textContent = ideas.filter(i => i.priority === 'high').length;
             document.getElementById('totalInProgress').textContent = ideas.filter(i => i.status === 'in-progress').length;
             document.getElementById('totalCompleted').textContent = ideas.filter(i => i.status === 'completed').length;
-            if (charts.type) updateCharts();
+
+            updateCharts();
         }
 
         function initCharts() {
-            const typeCtx = document.getElementById('typeChart').getContext('2d');
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-
-            charts.type = new Chart(typeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Aplicacion', 'Feature', 'Optimizacion', 'Investigacion'],
-                    datasets: [{
-                        data: [
-                            ideas.filter(i => i.type === 'app').length,
-                            ideas.filter(i => i.type === 'feature').length,
-                            ideas.filter(i => i.type === 'improvement').length,
-                            ideas.filter(i => i.type === 'research').length
-                        ],
-                        backgroundColor: ['#006B7E', '#5B4F8B', '#6B8A94', '#7A7A7A'],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } } }
-                }
-            });
-
-            charts.status = new Chart(statusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Idea', 'En Progreso', 'En Pausa', 'Completada'],
-                    datasets: [{
-                        data: [
-                            ideas.filter(i => i.status === 'idea').length,
-                            ideas.filter(i => i.status === 'in-progress').length,
-                            ideas.filter(i => i.status === 'on-hold').length,
-                            ideas.filter(i => i.status === 'completed').length
-                        ],
-                        backgroundColor: ['#5B4F8B', '#f59e0b', '#7A7A7A', '#10b981'],
-                        borderColor: '#fff',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: { legend: { position: 'bottom', labels: { padding: 15, font: { size: 11 } } } }
-                }
-            });
+            updateCharts();
         }
 
         function updateCharts() {
-            charts.type.data.datasets[0].data = [
-                ideas.filter(i => i.type === 'app').length,
-                ideas.filter(i => i.type === 'feature').length,
-                ideas.filter(i => i.type === 'improvement').length,
-                ideas.filter(i => i.type === 'research').length
-            ];
-            charts.type.update();
+            const types = {};
+            const statuses = {};
 
-            charts.status.data.datasets[0].data = [
-                ideas.filter(i => i.status === 'idea').length,
-                ideas.filter(i => i.status === 'in-progress').length,
-                ideas.filter(i => i.status === 'on-hold').length,
-                ideas.filter(i => i.status === 'completed').length
-            ];
-            charts.status.update();
+            ideas.forEach(idea => {
+                types[idea.type] = (types[idea.type] || 0) + 1;
+                statuses[idea.status] = (statuses[idea.status] || 0) + 1;
+            });
+
+            // Type Chart
+            if (charts.type) {
+                charts.type.destroy();
+            }
+            const typeCtx = document.getElementById('typeChart');
+            charts.type = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(types),
+                    datasets: [{
+                        data: Object.values(types),
+                        backgroundColor: [
+                            'rgba(0, 107, 126, 0.7)',
+                            'rgba(91, 79, 139, 0.7)',
+                            'rgba(107, 138, 148, 0.7)',
+                            'rgba(122, 122, 122, 0.7)'
+                        ],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            if (charts.status) {
+                charts.status.destroy();
+            }
+            const statusCtx = document.getElementById('statusChart');
+            charts.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statuses),
+                    datasets: [{
+                        data: Object.values(statuses),
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(100, 116, 139, 0.7)'
+                        ],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
         }
 
-        function formatType(type) {
-            const types = { 'app': 'Aplicacion', 'feature': 'Feature', 'improvement': 'Optimizacion', 'research': 'Investigacion' };
-            return types[type] || type;
+        function checkMicrophonePermission() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('⚠️ Tu navegador no soporta acceso al micrófono');
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    stream.getTracks().forEach(track => track.stop());
+                    alert('✅ Acceso al micrófono permitido');
+                })
+                .catch(err => {
+                    alert('⚠️ Acceso al micrófono denegado: ' + err.message);
+                });
         }
 
-        function formatPriority(priority) {
-            const map = { 'high': 'Alta', 'medium': 'Media', 'low': 'Baja' };
-            return map[priority] || priority;
-        }
-
-        function formatStatus(status) {
-            const map = { 'idea': 'Idea', 'in-progress': 'En Progreso', 'on-hold': 'En Pausa', 'completed': 'Completada' };
-            return map[status] || status;
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App instalada');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('La app ya está instalada o no está disponible para instalar');
+            }
         }
     </script>
 </body>
