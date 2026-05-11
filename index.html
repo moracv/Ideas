@@ -214,8 +214,12 @@
 
         textarea {
             resize: vertical;
-            min-height: 80px;
+            min-height: 120px;
             font-family: inherit;
+        }
+
+        textarea.large {
+            min-height: 200px;
         }
 
         .button-group {
@@ -248,6 +252,12 @@
             background: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 8px 16px rgba(0, 107, 126, 0.3);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .btn-secondary {
@@ -472,6 +482,11 @@
             animation: slideUp 0.3s ease;
         }
 
+        .modal-content.large {
+            max-width: 900px;
+            max-height: 90vh;
+        }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
@@ -622,6 +637,63 @@
             margin-bottom: 20px;
         }
 
+        .idea-selector {
+            margin-bottom: 20px;
+        }
+
+        .idea-select-container {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .idea-select-container select {
+            flex: 1;
+        }
+
+        .selected-idea-info {
+            background: white;
+            border: 2px solid rgba(0,107,126,0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .selected-idea-info.show {
+            display: block;
+        }
+
+        .selected-idea-info h4 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .idea-info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .idea-info-item {
+            padding: 8px;
+            background: var(--light);
+            border-radius: 6px;
+        }
+
+        .idea-info-item label {
+            font-size: 0.8em;
+            margin-bottom: 4px;
+        }
+
+        .idea-info-item-value {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.95em;
+        }
+
         .summary-box {
             background: white;
             border-left: 4px solid var(--success);
@@ -640,6 +712,60 @@
             color: var(--text);
             line-height: 1.6;
             font-size: 0.95em;
+        }
+
+        .viability-box {
+            background: white;
+            border-left: 4px solid var(--primary);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .viability-box h4 {
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-size: 1.1em;
+        }
+
+        .viability-content {
+            color: var(--text);
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+
+        .viability-score {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border);
+        }
+
+        .viability-score-label {
+            font-weight: 600;
+            color: var(--text-light);
+        }
+
+        .viability-score-bar {
+            flex: 1;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .viability-score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #006B7E, #5B4F8B);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.8em;
+            transition: width 0.5s ease;
         }
 
         .insights-grid {
@@ -666,6 +792,11 @@
         .insight-card:hover {
             border-color: var(--primary);
             box-shadow: 0 4px 12px rgba(0, 107, 126, 0.1);
+        }
+
+        .insight-icon {
+            font-size: 2em;
+            margin-bottom: 8px;
         }
 
         .insight-card h4 {
@@ -817,7 +948,7 @@
 
                     <div class="form-group">
                         <label for="ideaDesc">Descripcion *</label>
-                        <textarea id="ideaDesc" placeholder="Describe tu idea en detalle..." required></textarea>
+                        <textarea id="ideaDesc" placeholder="Describe tu idea en detalle..." class="large" required></textarea>
                         <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
                             <button type="button" class="btn-mic" onclick="startVoiceInput('ideaDesc')" id="btnStartDesc">
                                 Iniciar
@@ -889,7 +1020,38 @@
 
         <!-- AI Summary and Insights Section -->
         <div class="ai-section" id="aiSection" style="display: none;">
-            <h2>📊 Resumen e Insights con IA</h2>
+            <h2>📊 Analisis con IA</h2>
+
+            <div class="idea-selector">
+                <div class="idea-select-container">
+                    <label for="ideaToAnalyze" style="width: 100%; margin-bottom: 8px; display: block;">Selecciona la idea a analizar *</label>
+                    <select id="ideaToAnalyze" onchange="updateSelectedIdea()" style="flex: 1;">
+                        <option value="">-- Selecciona una idea --</option>
+                    </select>
+                </div>
+
+                <div class="selected-idea-info" id="selectedIdeaInfo">
+                    <h4 id="selectedIdeaTitle"></h4>
+                    <div class="idea-info-grid">
+                        <div class="idea-info-item">
+                            <label>Tipo</label>
+                            <div class="idea-info-item-value" id="selectedIdeaType"></div>
+                        </div>
+                        <div class="idea-info-item">
+                            <label>Prioridad</label>
+                            <div class="idea-info-item-value" id="selectedIdeaPriority"></div>
+                        </div>
+                        <div class="idea-info-item">
+                            <label>Estado</label>
+                            <div class="idea-info-item-value" id="selectedIdeaStatus"></div>
+                        </div>
+                        <div class="idea-info-item">
+                            <label>Descripción</label>
+                            <div class="idea-info-item-value" id="selectedIdeaDesc" style="font-size: 0.85em; max-height: 100px; overflow: hidden;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div class="model-selector">
                 <button class="model-btn active" data-model="FLASH_LITE" onclick="selectModel('FLASH_LITE')">
@@ -900,22 +1062,36 @@
                 </button>
             </div>
 
-            <button class="btn-primary" onclick="generateSummaryAndInsights()" style="width: 100%; margin-bottom: 20px;">
-                🤖 Generar Resumen e Insights
+            <button class="btn-primary" onclick="generateSummaryAndInsights()" style="width: 100%; margin-bottom: 20px;" id="generateBtn">
+                🤖 Generar Análisis con IA
             </button>
 
             <div id="summaryContainer" style="display: none;">
+                <!-- Resumen -->
                 <div class="summary-box">
                     <h4>📝 Resumen Ejecutivo</h4>
                     <p id="summaryText"></p>
                 </div>
 
+                <!-- Viabilidad -->
+                <div class="viability-box">
+                    <h4>📊 Análisis de Viabilidad</h4>
+                    <div class="viability-content" id="viabilityText"></div>
+                    <div class="viability-score">
+                        <span class="viability-score-label">Viabilidad:</span>
+                        <div class="viability-score-bar">
+                            <div class="viability-score-fill" id="viabilityBar" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
                 <h4 style="margin-top: 20px; color: var(--primary); margin-bottom: 12px;">💡 Insights Clave</h4>
                 <div class="insights-grid" id="insightsContainer">
                 </div>
             </div>
 
-            <div id="aiLoading" style="display: none; text-align: center; padding: 20px;">
+            <div id="aiLoading" style="display: none; text-align: center; padding: 40px 20px;">
                 <span class="loading-spinner"></span>
                 <span style="color: var(--text-light); font-weight: 600;">Generando análisis con IA...</span>
             </div>
@@ -1029,6 +1205,14 @@
         let isRecordingActive = false;
         let deferredPrompt = null;
         let selectedModel = 'FLASH_LITE';
+        let selectedIdeaId = null;
+
+        const typeNames = {
+            'app': 'Aplicación',
+            'feature': 'Feature/Mejora',
+            'improvement': 'Optimización',
+            'research': 'Investigación'
+        };
 
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -1209,12 +1393,53 @@
                 statusEl.classList.remove('disconnected');
                 statusEl.classList.add('active');
                 aiSection.style.display = 'block';
+                updateIdeaSelector();
             } else {
                 statusEl.textContent = '⚠️ Gemini no configurado';
                 statusEl.classList.add('disconnected');
                 statusEl.classList.remove('active');
                 aiSection.style.display = 'none';
             }
+        }
+
+        function updateIdeaSelector() {
+            const select = document.getElementById('ideaToAnalyze');
+            const currentValue = select.value;
+            
+            select.innerHTML = '<option value="">-- Selecciona una idea --</option>';
+            
+            ideas.forEach(idea => {
+                const option = document.createElement('option');
+                option.value = idea.id;
+                option.textContent = `${idea.title} (${typeNames[idea.type]})`;
+                select.appendChild(option);
+            });
+
+            select.value = currentValue;
+        }
+
+        function updateSelectedIdea() {
+            const select = document.getElementById('ideaToAnalyze');
+            const ideaId = parseInt(select.value);
+            const infoDiv = document.getElementById('selectedIdeaInfo');
+
+            if (!ideaId) {
+                infoDiv.classList.remove('show');
+                selectedIdeaId = null;
+                return;
+            }
+
+            const idea = ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            selectedIdeaId = idea.id;
+            document.getElementById('selectedIdeaTitle').textContent = idea.title;
+            document.getElementById('selectedIdeaType').textContent = typeNames[idea.type] || idea.type;
+            document.getElementById('selectedIdeaPriority').textContent = idea.priority.toUpperCase();
+            document.getElementById('selectedIdeaStatus').textContent = idea.status;
+            document.getElementById('selectedIdeaDesc').textContent = idea.description;
+
+            infoDiv.classList.add('show');
         }
 
         function selectModel(model) {
@@ -1234,8 +1459,14 @@
                 return;
             }
 
-            if (ideas.length === 0) {
-                alert('⚠️ No hay ideas para analizar');
+            if (!selectedIdeaId) {
+                alert('⚠️ Debes seleccionar una idea para analizar');
+                return;
+            }
+
+            const idea = ideas.find(i => i.id === selectedIdeaId);
+            if (!idea) {
+                alert('⚠️ No se encontró la idea seleccionada');
                 return;
             }
 
@@ -1243,29 +1474,37 @@
             const summaryContainer = document.getElementById('summaryContainer');
             const apiKey = geminiConfig.getApiKey();
             const model = geminiConfig.getModelName(selectedModel);
+            const generateBtn = document.getElementById('generateBtn');
 
             loadingDiv.style.display = 'block';
             summaryContainer.style.display = 'none';
+            generateBtn.disabled = true;
 
             try {
-                // Preparar datos
-                const ideasSummary = ideas.map((idea, idx) => 
-                    `${idx + 1}. ${idea.title} (${idea.type} - ${idea.priority}): ${idea.description}`
-                ).join('\n');
+                const prompt = `Analiza la siguiente idea y proporciona:
 
-                const prompt = `Analiza las siguientes ideas y proporciona:
-1. Un resumen ejecutivo conciso
-2. 3-4 insights clave sobre las ideas, oportunidades y patrones
+IDEA:
+Título: ${idea.title}
+Tipo: ${typeNames[idea.type] || idea.type}
+Descripción: ${idea.description}
+Prioridad: ${idea.priority}
+Estado: ${idea.status}
 
-IDEAS:
-${ideasSummary}
+Por favor, proporciona una respuesta estructurada en JSON con:
+1. Un resumen ejecutivo (2-3 párrafos)
+2. Un análisis de viabilidad detallado (considerando el tipo de idea, con un porcentaje 0-100)
+3. 3-4 insights clave con iconos sugeridos para cada uno
 
-Responde en formato JSON con la siguiente estructura:
+Formato JSON obligatorio:
 {
-  "summary": "Resumen ejecutivo...",
+  "summary": "Resumen ejecutivo detallado...",
+  "viability": {
+    "analysis": "Análisis detallado de viabilidad...",
+    "score": 75
+  },
   "insights": [
-    {"title": "Insight 1", "description": "Descripción detallada"},
-    {"title": "Insight 2", "description": "Descripción detallada"},
+    {"icon": "🎯", "title": "Título del insight", "description": "Descripción detallada del insight"},
+    {"icon": "⚡", "title": "Otro insight", "description": "Descripción..."},
     ...
   ]
 }`;
@@ -1284,7 +1523,7 @@ Responde en formato JSON con la siguiente estructura:
                                 }]
                             }],
                             generationConfig: {
-                                maxOutputTokens: 2000,
+                                maxOutputTokens: 2500,
                                 temperature: 0.7
                             }
                         })
@@ -1312,11 +1551,20 @@ Responde en formato JSON con la siguiente estructura:
 
                 // Mostrar resultados
                 document.getElementById('summaryText').textContent = result.summary;
+                
+                // Viabilidad
+                document.getElementById('viabilityText').textContent = result.viability.analysis;
+                const viabilityScore = result.viability.score || 0;
+                const viabilityFill = document.getElementById('viabilityBar');
+                viabilityFill.style.width = viabilityScore + '%';
+                viabilityFill.textContent = viabilityScore + '%';
 
+                // Insights
                 const insightsContainer = document.getElementById('insightsContainer');
-                insightsContainer.innerHTML = result.insights.map((insight, idx) => `
+                insightsContainer.innerHTML = result.insights.map((insight) => `
                     <div class="insight-card">
-                        <h4>💡 ${insight.title}</h4>
+                        <div class="insight-icon">${insight.icon}</div>
+                        <h4>${insight.title}</h4>
                         <p>${insight.description}</p>
                     </div>
                 `).join('');
@@ -1327,6 +1575,7 @@ Responde en formato JSON con la siguiente estructura:
             } catch (error) {
                 console.error('Error:', error);
                 loadingDiv.style.display = 'none';
+                generateBtn.disabled = false;
                 alert('❌ Error al generar análisis: ' + error.message);
             }
         }
@@ -1466,6 +1715,7 @@ Responde en formato JSON con la siguiente estructura:
             e.target.reset();
             renderIdeas();
             updateDashboard();
+            updateIdeaSelector();
 
             alert('✅ Idea agregada correctamente');
         }
@@ -1494,7 +1744,7 @@ Responde en formato JSON con la siguiente estructura:
                         <div style="flex: 1;">
                             <div class="idea-title">${idea.title}</div>
                             <div class="idea-badges">
-                                <span class="badge type-${idea.type}">${idea.type}</span>
+                                <span class="badge type-${idea.type}">${typeNames[idea.type] || idea.type}</span>
                                 <span class="badge">${idea.status}</span>
                             </div>
                         </div>
@@ -1519,11 +1769,11 @@ Responde en formato JSON con la siguiente estructura:
                 </div>
                 <div class="idea-detail">
                     <label>Descripcion</label>
-                    <div class="idea-detail-value">${idea.description}</div>
+                    <div class="idea-detail-value" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${idea.description}</div>
                 </div>
                 <div class="idea-detail">
                     <label>Tipo</label>
-                    <div class="idea-detail-value">${idea.type}</div>
+                    <div class="idea-detail-value">${typeNames[idea.type] || idea.type}</div>
                 </div>
                 <div class="idea-detail">
                     <label>Prioridad</label>
@@ -1571,6 +1821,7 @@ Responde en formato JSON con la siguiente estructura:
                 localStorage.setItem('ideas', JSON.stringify(ideas));
                 renderIdeas();
                 updateDashboard();
+                updateIdeaSelector();
                 closeModal();
             }
         }
@@ -1605,7 +1856,7 @@ Responde en formato JSON con la siguiente estructura:
             charts.type = new Chart(typeCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(types),
+                    labels: Object.keys(types).map(t => typeNames[t] || t),
                     datasets: [{
                         data: Object.values(types),
                         backgroundColor: [
