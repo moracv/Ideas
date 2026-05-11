@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ideas-cache-v2';
+const CACHE_NAME = 'ideas-cache-v3';
 const urlsToCache = ['/', './index.html', './manifest.json'];
 
 self.addEventListener('install', (event) => {
@@ -25,6 +25,22 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+
+    if (event.request.mode === 'navigate') {
+        event.respondWith(
+            fetch(event.request)
+                .then((response) => {
+                    const toCache = response.clone();
+                    caches.open(CACHE_NAME).then((cache) => {
+                        cache.put(event.request, toCache).catch(() => {});
+                    });
+                    return response;
+                })
+                .catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html')))
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then((cached) => {
             if (cached) return cached;

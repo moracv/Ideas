@@ -892,3 +892,1107 @@
         ::-webkit-scrollbar-track { background: var(--light); }
         ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="offlineBanner" class="offline-banner">
+            Modo offline activado - Los datos se guardan localmente
+        </div>
+
+        <header>
+            <h1 id="appTitle">Gestor de Ideas Inteligente</h1>
+            <p id="appDescription">Captura, clasifica y monitorea tus ideas con IA automática</p>
+            <div id="geminiStatusContainer" style="text-align: center; margin-bottom: 10px;">
+                <span id="geminiStatus" class="gemini-status disconnected">Gemini no configurado</span>
+            </div>
+            <div class="header-buttons">
+                <button class="header-btn outline" onclick="openEditHeaderModal()">Editar Titulo</button>
+                <button class="header-btn outline" onclick="openGeminiConfigModal()">⚙️ Configurar Gemini</button>
+                <button class="header-btn outline" onclick="checkMicrophonePermission()">Verificar Microfono</button>
+                <button class="header-btn" onclick="installApp()">Instalar App</button>
+            </div>
+        </header>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="totalIdeas">0</div>
+                <div class="stat-label">Ideas Totales</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalHigh">0</div>
+                <div class="stat-label">Alta Prioridad</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalInProgress">0</div>
+                <div class="stat-label">En Progreso</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalCompleted">0</div>
+                <div class="stat-label">Completadas</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="charts-grid">
+            <div class="card">
+                <h2>Distribucion por Tipo</h2>
+                <div class="chart-container">
+                    <canvas id="typeChart"></canvas>
+                </div>
+            </div>
+            <div class="card">
+                <h2>Distribucion por Estado</h2>
+                <div class="chart-container">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-grid">
+            <!-- Add Idea Form -->
+            <div class="card">
+                <h2>Agregar Nueva Idea</h2>
+                <form id="ideaForm">
+                    <div class="form-group">
+                        <label for="ideaTitle">Titulo de la Idea *</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="text" id="ideaTitle" placeholder="Ej: Aplicacion de gestion de tareas" required>
+                            <button type="button" class="btn-mic" onclick="startVoiceInput('ideaTitle')" id="btnStartTitle">
+                                Iniciar
+                            </button>
+                            <button type="button" class="btn-mic" onclick="stopVoiceInput('ideaTitle')" id="btnStopTitle" style="display: none;">
+                                Parar
+                            </button>
+                        </div>
+                        <div id="ideaTitleStatus" class="voice-status"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaDesc">Descripcion *</label>
+                        <textarea id="ideaDesc" placeholder="Describe tu idea en detalle..." class="large" required></textarea>
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                            <button type="button" class="btn-mic" onclick="startVoiceInput('ideaDesc')" id="btnStartDesc">
+                                Iniciar
+                            </button>
+                            <button type="button" class="btn-mic" onclick="stopVoiceInput('ideaDesc')" id="btnStopDesc" style="display: none;">
+                                Parar
+                            </button>
+                        </div>
+                        <div id="ideaDescStatus" class="voice-status"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaType">Tipo de Idea *</label>
+                        <select id="ideaType" required>
+                            <option value="">Selecciona un tipo</option>
+                            <option value="app">Aplicacion</option>
+                            <option value="feature">Feature/Mejora</option>
+                            <option value="improvement">Optimizacion</option>
+                            <option value="research">Investigacion</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaPriority">Prioridad *</label>
+                        <select id="ideaPriority" required>
+                            <option value="">Selecciona prioridad</option>
+                            <option value="high">Alta</option>
+                            <option value="medium">Media</option>
+                            <option value="low">Baja</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ideaStatus">Estado *</label>
+                        <select id="ideaStatus" required>
+                            <option value="idea">Idea</option>
+                            <option value="in-progress">En Progreso</option>
+                            <option value="completed">Completada</option>
+                            <option value="on-hold">En Pausa</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="submit" class="btn-primary">Agregar Idea</button>
+                        <button type="reset" class="btn-secondary">Limpiar</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Ideas List -->
+            <div class="card">
+                <h2>Mis Ideas</h2>
+
+                <div class="tabs">
+                    <button class="tab active" data-filter="all">Todas</button>
+                    <button class="tab" data-filter="high">Alta</button>
+                    <button class="tab" data-filter="medium">Media</button>
+                    <button class="tab" data-filter="low">Baja</button>
+                </div>
+
+                <div id="ideasList" class="ideas-list">
+                    <div class="empty-state">
+                        <div style="font-size: 3em; margin-bottom: 12px;">💭</div>
+                        <p>No hay ideas aun. ¡Crea tu primera idea!</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Summary and Insights Section -->
+        <div class="ai-section" id="aiSection" style="display: none;">
+            <h2>📊 Análisis con IA</h2>
+
+            <div class="selected-idea-info" id="selectedIdeaInfo">
+                <h4>✅ Idea Seleccionada: <span id="selectedIdeaTitle"></span></h4>
+                <div class="idea-info-grid">
+                    <div class="idea-info-item">
+                        <label>Tipo</label>
+                        <div class="idea-info-item-value" id="selectedIdeaType"></div>
+                    </div>
+                    <div class="idea-info-item">
+                        <label>Prioridad</label>
+                        <div class="idea-info-item-value" id="selectedIdeaPriority"></div>
+                    </div>
+                    <div class="idea-info-item">
+                        <label>Estado</label>
+                        <div class="idea-info-item-value" id="selectedIdeaStatus"></div>
+                    </div>
+                    <div class="idea-info-item">
+                        <label>Descripción</label>
+                        <div class="idea-info-item-value" id="selectedIdeaDesc" style="font-size: 0.85em; max-height: 100px; overflow: hidden;"></div>
+                    </div>
+                </div>
+                <button class="btn-secondary" onclick="deselectIdea()" style="margin-top: 12px; width: 100%;">Seleccionar otra idea</button>
+            </div>
+
+            <div id="aiNotSelected" style="display: block; text-align: center; padding: 40px 20px; color: var(--text-light);">
+                <div style="font-size: 3em; margin-bottom: 12px;">👆</div>
+                <p>Selecciona una idea de la lista para generar un análisis con IA</p>
+            </div>
+
+            <div id="aiControlsContainer" style="display: none;">
+                <div class="model-selector">
+                    <button class="model-btn active" data-model="FLASH_LITE" onclick="selectModel('FLASH_LITE')">
+                        ⚡ Gemini 3.1 Flash Lite (Rápido)
+                    </button>
+                    <button class="model-btn" data-model="PRO" onclick="selectModel('PRO')">
+                        🚀 Gemini 2.5 Pro (Potente)
+                    </button>
+                </div>
+
+                <button class="btn-primary" onclick="generateSummaryAndInsights()" style="width: 100%; margin-bottom: 20px;" id="generateBtn">
+                    🤖 Generar Análisis con IA
+                </button>
+            </div>
+
+            <div id="summaryContainer" style="display: none;">
+                <!-- Resumen -->
+                <div class="summary-box">
+                    <h4>📝 Resumen Ejecutivo</h4>
+                    <p id="summaryText"></p>
+                </div>
+
+                <!-- Viabilidad -->
+                <div class="viability-box">
+                    <h4>📊 Análisis de Viabilidad</h4>
+                    <div class="viability-content" id="viabilityText"></div>
+                    <div class="viability-score">
+                        <span class="viability-score-label">Viabilidad:</span>
+                        <div class="viability-score-bar">
+                            <div class="viability-score-fill" id="viabilityBar" style="width: 0%">0%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <h4 style="margin-top: 20px; color: var(--primary); margin-bottom: 12px;">💡 Insights Clave</h4>
+                <div class="insights-grid" id="insightsContainer">
+                </div>
+            </div>
+
+            <div id="aiLoading" style="display: none; text-align: center; padding: 40px 20px;">
+                <span class="loading-spinner"></span>
+                <span style="color: var(--text-light); font-weight: 600;">Generando análisis con IA...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Idea Modal -->
+    <div id="editIdeaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>✏️ Editar Idea</h3>
+                <button class="close-btn" onclick="closeEditIdeaModal()">&times;</button>
+            </div>
+            <form id="editIdeaForm">
+                <div class="form-group">
+                    <label for="editIdeaTitle">Titulo de la Idea *</label>
+                    <input type="text" id="editIdeaTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaDesc">Descripcion *</label>
+                    <textarea id="editIdeaDesc" class="large" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaType">Tipo de Idea *</label>
+                    <select id="editIdeaType" required>
+                        <option value="app">Aplicacion</option>
+                        <option value="feature">Feature/Mejora</option>
+                        <option value="improvement">Optimizacion</option>
+                        <option value="research">Investigacion</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaPriority">Prioridad *</label>
+                    <select id="editIdeaPriority" required>
+                        <option value="high">Alta</option>
+                        <option value="medium">Media</option>
+                        <option value="low">Baja</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaStatus">Estado *</label>
+                    <select id="editIdeaStatus" required>
+                        <option value="idea">Idea</option>
+                        <option value="in-progress">En Progreso</option>
+                        <option value="completed">Completada</option>
+                        <option value="on-hold">En Pausa</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">💾 Guardar Cambios</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditIdeaModal()">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Header Modal -->
+    <div id="editHeaderModal" class="modal">
+        <div class="modal-content" style="max-width: 480px;">
+            <div class="modal-header">
+                <h3>Editar Titulo y Descripcion</h3>
+                <button class="close-btn" onclick="closeEditHeaderModal()">&times;</button>
+            </div>
+            <div class="form-group">
+                <label for="editTitleInput">Titulo de la Aplicacion</label>
+                <input type="text" id="editTitleInput" placeholder="Ej: Mi Gestor de Ideas">
+            </div>
+            <div class="form-group">
+                <label for="editDescInput">Descripcion</label>
+                <textarea id="editDescInput" placeholder="Descripcion de la aplicacion..." style="min-height: 80px;"></textarea>
+            </div>
+            <div class="button-group">
+                <button class="btn-primary" onclick="saveHeaderChanges()">Guardar</button>
+                <button class="btn-secondary" onclick="closeEditHeaderModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gemini Config Modal -->
+    <div id="geminiConfigModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>⚙️ Configurar Google AI Studio (Gemini)</h3>
+                <button class="close-btn" onclick="closeGeminiConfigModal()">&times;</button>
+            </div>
+
+            <div style="background: rgba(91, 79, 139, 0.1); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+                <p style="font-size: 0.9em; color: var(--text); line-height: 1.6;">
+                    Para usar Gemini, necesitas una API Key de Google AI Studio.
+                    <br><strong>Obtén tu API Key gratis en:</strong>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--primary); text-decoration: underline;">
+                        aistudio.google.com/app/apikey
+                    </a>
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label for="geminiApiKey">API Key de Google AI Studio *</label>
+                <input
+                    type="password"
+                    id="geminiApiKey"
+                    placeholder="Pega tu API Key aquí"
+                    autocomplete="off">
+                <p style="font-size: 0.85em; color: var(--text-light); margin-top: 8px;">
+                    Tu API Key se guardará solo en tu dispositivo de forma segura.
+                </p>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <input type="checkbox" id="geminiShowKey" onchange="toggleShowKey()">
+                    Mostrar API Key
+                </label>
+            </div>
+
+            <div id="geminiConfigError" style="display: none; background: rgba(239, 68, 68, 0.1); color: var(--danger); padding: 12px; border-radius: 6px; margin-bottom: 16px; font-size: 0.9em;"></div>
+
+            <div class="button-group">
+                <button class="btn-primary" onclick="saveGeminiConfig()">✅ Guardar Configuración</button>
+                <button class="btn-secondary" onclick="closeGeminiConfigModal()">Cancelar</button>
+            </div>
+
+            <div id="geminiConfigured" style="display: none; margin-top: 20px; padding: 16px; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border-left: 4px solid var(--success);">
+                <p style="color: var(--success); font-weight: 600; margin-bottom: 12px;">✅ Gemini Configurado Correctamente</p>
+                <button class="btn-danger" onclick="disconnectGemini()">Desconectar Gemini</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== SERVICE WORKER ====================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(() => {
+                    console.log('Service Worker registrado');
+                }).catch((err) => {
+                    console.log('Service Worker error:', err);
+                });
+            });
+        }
+
+        // ==================== APP LOGIC ====================
+        let ideas = JSON.parse(localStorage.getItem('ideas')) || [];
+        let charts = { type: null, status: null };
+        let currentFilter = 'all';
+        let voiceRecognition = null;
+        let currentVoiceField = null;
+        let transcriptBuffer = '';
+        let processedFinalCount = 0;
+        let isRecordingActive = false;
+        let deferredPrompt = null;
+        let selectedModel = 'FLASH_LITE';
+        let selectedIdeaId = null;
+        let editingIdeaId = null;
+
+        const typeNames = {
+            'app': 'Aplicación',
+            'feature': 'Feature/Mejora',
+            'improvement': 'Optimización',
+            'research': 'Investigación'
+        };
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        if (SpeechRecognition) {
+            voiceRecognition = new SpeechRecognition();
+            voiceRecognition.lang = 'es-ES';
+            voiceRecognition.continuous = true;
+            voiceRecognition.interimResults = true;
+
+            voiceRecognition.onstart = () => {
+                console.log('Grabacion iniciada');
+                transcriptBuffer = '';
+                processedFinalCount = 0;
+                isRecordingActive = true;
+            };
+
+            voiceRecognition.onresult = (event) => {
+                let newFinalText = '';
+                let interimTranscript = '';
+
+                for (let i = processedFinalCount; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        newFinalText += transcript + ' ';
+                        processedFinalCount = i + 1;
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (newFinalText.trim()) {
+                    transcriptBuffer += newFinalText;
+                }
+
+                const statusEl = document.getElementById(currentVoiceField + 'Status');
+                if (statusEl) {
+                    const displayText = transcriptBuffer + interimTranscript;
+                    statusEl.textContent = (displayText.trim() ? 'Escuchando: ' + displayText : 'Escuchando...');
+                }
+            };
+
+            voiceRecognition.onerror = (event) => {
+                console.error('Error de voz:', event.error);
+                isRecordingActive = false;
+
+                const fieldKey = currentVoiceField;
+                const statusEl = document.getElementById(fieldKey + 'Status');
+                const isTitle = fieldKey === 'ideaTitle';
+                const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
+                const stopBtn = document.getElementById('btnStop' + (isTitle ? 'Title' : 'Desc'));
+
+                if (statusEl) {
+                    statusEl.textContent = 'Error: ' + event.error;
+                    statusEl.classList.remove('listening');
+                    statusEl.classList.add('error');
+                }
+                if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.classList.remove('recording'); }
+                if (startBtn) { startBtn.style.display = 'block'; }
+
+                setTimeout(() => {
+                    if (statusEl) { statusEl.textContent = ''; statusEl.classList.remove('error'); }
+                }, 3000);
+            };
+
+            voiceRecognition.onend = () => {
+                console.log('onend - buffer:', transcriptBuffer, 'campo:', currentVoiceField, 'activo:', isRecordingActive);
+                isRecordingActive = false;
+
+                if (!currentVoiceField) return;
+
+                const fieldKey = currentVoiceField;
+                const field = document.getElementById(fieldKey);
+                const statusEl = document.getElementById(fieldKey + 'Status');
+                const isTitle = fieldKey === 'ideaTitle';
+                const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
+                const stopBtn = document.getElementById('btnStop' + (isTitle ? 'Title' : 'Desc'));
+
+                if (field && transcriptBuffer.trim()) {
+                    const texto = transcriptBuffer.trim();
+                    if (field.value && !field.value.endsWith(' ')) {
+                        field.value += ' ' + texto;
+                    } else {
+                        field.value += texto;
+                    }
+                    if (statusEl) {
+                        statusEl.textContent = 'Capturado: ' + texto;
+                        statusEl.classList.add('success');
+                        statusEl.classList.remove('listening');
+                    }
+                } else if (field) {
+                    if (statusEl) { statusEl.textContent = 'No se detecto voz'; statusEl.classList.remove('listening'); }
+                }
+
+                if (stopBtn) { stopBtn.style.display = 'none'; stopBtn.classList.remove('recording'); }
+                if (startBtn) { startBtn.style.display = 'block'; }
+
+                setTimeout(() => {
+                    if (statusEl) { statusEl.textContent = ''; statusEl.classList.remove('success'); }
+                }, 2000);
+
+                currentVoiceField = null;
+                transcriptBuffer = '';
+                processedFinalCount = 0;
+            };
+        }
+
+        // ==================== GEMINI CONFIG ====================
+        function openGeminiConfigModal() {
+            const modal = document.getElementById('geminiConfigModal');
+            const configured = document.getElementById('geminiConfigured');
+            const form = document.querySelector('#geminiConfigModal .form-group');
+
+            if (geminiConfig.isConfigured()) {
+                configured.style.display = 'block';
+                form.parentElement.style.display = 'none';
+            } else {
+                configured.style.display = 'none';
+                form.parentElement.style.display = 'block';
+                document.getElementById('geminiApiKey').value = '';
+            }
+
+            modal.classList.add('active');
+        }
+
+        function closeGeminiConfigModal() {
+            document.getElementById('geminiConfigModal').classList.remove('active');
+            document.getElementById('geminiConfigError').style.display = 'none';
+        }
+
+        function toggleShowKey() {
+            const input = document.getElementById('geminiApiKey');
+            const checkbox = document.getElementById('geminiShowKey');
+            input.type = checkbox.checked ? 'text' : 'password';
+        }
+
+        async function saveGeminiConfig() {
+            const apiKey = document.getElementById('geminiApiKey').value.trim();
+            const errorDiv = document.getElementById('geminiConfigError');
+
+            if (!apiKey) {
+                errorDiv.textContent = '⚠️ Por favor ingresa tu API Key';
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            errorDiv.style.display = 'none';
+
+            // Validar API Key
+            const validation = await geminiConfig.validateApiKey(apiKey);
+            if (!validation.valid) {
+                errorDiv.textContent = '❌ ' + validation.error;
+                errorDiv.style.display = 'block';
+                return;
+            }
+
+            // Guardar configuración
+            geminiConfig.saveConfig(apiKey);
+            updateGeminiStatus();
+
+            alert('✅ Gemini configurado correctamente');
+            closeGeminiConfigModal();
+        }
+
+        function disconnectGemini() {
+            if (confirm('¿Desconectar Gemini? Tendrás que volver a configurar tu API Key.')) {
+                geminiConfig.clearConfig();
+                updateGeminiStatus();
+                openGeminiConfigModal();
+            }
+        }
+
+        function updateGeminiStatus() {
+            const statusEl = document.getElementById('geminiStatus');
+            const aiSection = document.getElementById('aiSection');
+
+            if (geminiConfig.isConfigured()) {
+                statusEl.textContent = '✅ Gemini Conectado';
+                statusEl.classList.remove('disconnected');
+                statusEl.classList.add('active');
+                aiSection.style.display = 'block';
+            } else {
+                statusEl.textContent = '⚠️ Gemini no configurado';
+                statusEl.classList.add('disconnected');
+                statusEl.classList.remove('active');
+                aiSection.style.display = 'none';
+                deselectIdea();
+            }
+        }
+
+        function selectIdeaForAnalysis(ideaId) {
+            if (!geminiConfig.isConfigured()) {
+                alert('⚠️ Primero debes configurar tu API Key de Gemini');
+                openGeminiConfigModal();
+                return;
+            }
+
+            const idea = ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            selectedIdeaId = idea.id;
+            document.getElementById('selectedIdeaTitle').textContent = idea.title;
+            document.getElementById('selectedIdeaType').textContent = typeNames[idea.type] || idea.type;
+            document.getElementById('selectedIdeaPriority').textContent = idea.priority.toUpperCase();
+            document.getElementById('selectedIdeaStatus').textContent = idea.status;
+            document.getElementById('selectedIdeaDesc').textContent = idea.description;
+
+            document.getElementById('selectedIdeaInfo').classList.add('show');
+            document.getElementById('aiNotSelected').style.display = 'none';
+            document.getElementById('aiControlsContainer').style.display = 'block';
+            document.getElementById('summaryContainer').style.display = 'none';
+            document.getElementById('aiLoading').style.display = 'none';
+
+            // Scroll to AI section
+            document.getElementById('aiSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deselectIdea() {
+            selectedIdeaId = null;
+            document.getElementById('selectedIdeaInfo').classList.remove('show');
+            document.getElementById('aiNotSelected').style.display = 'block';
+            document.getElementById('aiControlsContainer').style.display = 'none';
+            document.getElementById('summaryContainer').style.display = 'none';
+            document.getElementById('aiLoading').style.display = 'none';
+        }
+
+        function selectModel(model) {
+            selectedModel = model;
+            document.querySelectorAll('.model-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.model === model) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        async function generateSummaryAndInsights() {
+            if (!geminiConfig.isConfigured()) {
+                alert('⚠️ Primero debes configurar tu API Key de Gemini');
+                openGeminiConfigModal();
+                return;
+            }
+
+            if (!selectedIdeaId) {
+                alert('⚠️ Debes seleccionar una idea para analizar');
+                return;
+            }
+
+            const idea = ideas.find(i => i.id === selectedIdeaId);
+            if (!idea) {
+                alert('⚠️ No se encontró la idea seleccionada');
+                return;
+            }
+
+            const loadingDiv = document.getElementById('aiLoading');
+            const summaryContainer = document.getElementById('summaryContainer');
+            const apiKey = geminiConfig.getApiKey();
+            const model = geminiConfig.getModelName(selectedModel);
+            const generateBtn = document.getElementById('generateBtn');
+
+            loadingDiv.style.display = 'block';
+            summaryContainer.style.display = 'none';
+            generateBtn.disabled = true;
+
+            try {
+                const prompt = `Analiza la siguiente idea y proporciona:
+
+IDEA:
+Título: ${idea.title}
+Tipo: ${typeNames[idea.type] || idea.type}
+Descripción: ${idea.description}
+Prioridad: ${idea.priority}
+Estado: ${idea.status}
+
+Por favor, proporciona una respuesta estructurada en JSON con:
+1. Un resumen ejecutivo (2-3 párrafos)
+2. Un análisis de viabilidad detallado (considerando el tipo de idea, con un porcentaje 0-100)
+3. 3-4 insights clave con iconos sugeridos para cada uno
+
+Formato JSON obligatorio:
+{
+  "summary": "Resumen ejecutivo detallado...",
+  "viability": {
+    "analysis": "Análisis detallado de viabilidad...",
+    "score": 75
+  },
+  "insights": [
+    {"icon": "🎯", "title": "Título del insight", "description": "Descripción detallada del insight"},
+    {"icon": "⚡", "title": "Otro insight", "description": "Descripción..."},
+    ...
+  ]
+}`;
+
+                const response = await fetch(
+                    `${geminiConfig.API_ENDPOINT}/${model}:generateContent?key=${apiKey}`,
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [{
+                                    text: prompt
+                                }]
+                            }],
+                            generationConfig: {
+                                maxOutputTokens: 2500,
+                                temperature: 0.7
+                            }
+                        })
+                    }
+                );
+
+                if (!response.ok) {
+                    throw new Error('Error al conectar con Gemini API');
+                }
+
+                const data = await response.json();
+                const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                if (!content) {
+                    throw new Error('No se recibió respuesta de Gemini');
+                }
+
+                // Parsear JSON
+                const jsonMatch = content.match(/\{[\s\S]*\}/);
+                if (!jsonMatch) {
+                    throw new Error('Respuesta en formato inválido');
+                }
+
+                const result = JSON.parse(jsonMatch[0]);
+
+                // Mostrar resultados
+                document.getElementById('summaryText').textContent = result.summary;
+
+                // Viabilidad
+                document.getElementById('viabilityText').textContent = result.viability.analysis;
+                const viabilityScore = result.viability.score || 0;
+                const viabilityFill = document.getElementById('viabilityBar');
+                viabilityFill.style.width = viabilityScore + '%';
+                viabilityFill.textContent = viabilityScore + '%';
+
+                // Insights
+                const insightsContainer = document.getElementById('insightsContainer');
+                insightsContainer.innerHTML = result.insights.map((insight) => `
+                    <div class="insight-card">
+                        <div class="insight-icon">${insight.icon}</div>
+                        <h4>${insight.title}</h4>
+                        <p>${insight.description}</p>
+                    </div>
+                `).join('');
+
+                loadingDiv.style.display = 'none';
+                summaryContainer.style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                loadingDiv.style.display = 'none';
+                generateBtn.disabled = false;
+                alert('❌ Error al generar análisis: ' + error.message);
+            }
+        }
+
+        // ==================== EDIT IDEA ====================
+        function openEditIdeaModal(ideaId) {
+            const idea = ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            editingIdeaId = idea.id;
+            document.getElementById('editIdeaTitle').value = idea.title;
+            document.getElementById('editIdeaDesc').value = idea.description;
+            document.getElementById('editIdeaType').value = idea.type;
+            document.getElementById('editIdeaPriority').value = idea.priority;
+            document.getElementById('editIdeaStatus').value = idea.status;
+
+            document.getElementById('editIdeaModal').classList.add('active');
+        }
+
+        function closeEditIdeaModal() {
+            document.getElementById('editIdeaModal').classList.remove('active');
+            editingIdeaId = null;
+        }
+
+        document.getElementById('editIdeaForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const idea = ideas.find(i => i.id === editingIdeaId);
+            if (!idea) return;
+
+            idea.title = document.getElementById('editIdeaTitle').value;
+            idea.description = document.getElementById('editIdeaDesc').value;
+            idea.type = document.getElementById('editIdeaType').value;
+            idea.priority = document.getElementById('editIdeaPriority').value;
+            idea.status = document.getElementById('editIdeaStatus').value;
+
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+            renderIdeas();
+            updateDashboard();
+            closeEditIdeaModal();
+            alert('✅ Idea actualizada correctamente');
+        });
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadHeaderCustomization();
+            setupEventListeners();
+            renderIdeas();
+            updateDashboard();
+            initCharts();
+            checkOnlineStatus();
+            updateGeminiStatus();
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                const installBtn = document.querySelector('.header-btn[onclick*="installApp"]');
+                if (installBtn) installBtn.style.display = 'block';
+            }, { once: false });
+
+            window.addEventListener('appinstalled', () => {
+                alert('App instalada correctamente en tu dispositivo!');
+                deferredPrompt = null;
+            }, { once: true });
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById('offlineBanner').classList.remove('show');
+        });
+
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineBanner').classList.add('show');
+        });
+
+        function checkOnlineStatus() {
+            if (!navigator.onLine) document.getElementById('offlineBanner').classList.add('show');
+        }
+
+        function loadHeaderCustomization() {
+            const savedTitle = localStorage.getItem('appTitle');
+            const savedDesc = localStorage.getItem('appDescription');
+            if (savedTitle) document.getElementById('appTitle').textContent = savedTitle;
+            if (savedDesc) document.getElementById('appDescription').textContent = savedDesc;
+        }
+
+        function openEditHeaderModal() {
+            document.getElementById('editTitleInput').value = document.getElementById('appTitle').textContent;
+            document.getElementById('editDescInput').value = document.getElementById('appDescription').textContent;
+            document.getElementById('editHeaderModal').classList.add('active');
+        }
+
+        function closeEditHeaderModal() {
+            document.getElementById('editHeaderModal').classList.remove('active');
+        }
+
+        function saveHeaderChanges() {
+            const newTitle = document.getElementById('editTitleInput').value.trim();
+            const newDesc = document.getElementById('editDescInput').value.trim();
+            if (newTitle) {
+                document.getElementById('appTitle').textContent = newTitle;
+                localStorage.setItem('appTitle', newTitle);
+            }
+            if (newDesc) {
+                document.getElementById('appDescription').textContent = newDesc;
+                localStorage.setItem('appDescription', newDesc);
+            }
+            closeEditHeaderModal();
+        }
+
+        function setupEventListeners() {
+            document.getElementById('ideaForm').addEventListener('submit', handleAddIdea);
+
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', (e) => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    e.target.classList.add('active');
+                    currentFilter = e.target.dataset.filter;
+                    renderIdeas();
+                });
+            });
+
+            document.getElementById('editHeaderModal').addEventListener('click', (e) => {
+                if (e.target.id === 'editHeaderModal') closeEditHeaderModal();
+            });
+
+            document.getElementById('editIdeaModal').addEventListener('click', (e) => {
+                if (e.target.id === 'editIdeaModal') closeEditIdeaModal();
+            });
+
+            document.getElementById('geminiConfigModal').addEventListener('click', (e) => {
+                if (e.target.id === 'geminiConfigModal') closeGeminiConfigModal();
+            });
+        }
+
+        function startVoiceInput(fieldId) {
+            if (!voiceRecognition) {
+                alert('Tu navegador no soporta reconocimiento de voz');
+                return;
+            }
+
+            currentVoiceField = fieldId;
+            voiceRecognition.start();
+
+            const isTitle = fieldId === 'ideaTitle';
+            const startBtn = document.getElementById('btnStart' + (isTitle ? 'Title' : 'Desc'));
+            const stopBtn = document.getElementById('btnStop' + (isTitle ? 'Title' : 'Desc'));
+            const statusEl = document.getElementById(fieldId + 'Status');
+
+            if (startBtn) startBtn.style.display = 'none';
+            if (stopBtn) { stopBtn.style.display = 'block'; stopBtn.classList.add('recording'); }
+            if (statusEl) { statusEl.textContent = 'Escuchando...'; statusEl.classList.add('listening'); }
+        }
+
+        function stopVoiceInput(fieldId) {
+            if (voiceRecognition) {
+                voiceRecognition.stop();
+            }
+        }
+
+        function handleAddIdea(e) {
+            e.preventDefault();
+
+            const idea = {
+                id: Date.now(),
+                title: document.getElementById('ideaTitle').value,
+                description: document.getElementById('ideaDesc').value,
+                type: document.getElementById('ideaType').value,
+                priority: document.getElementById('ideaPriority').value,
+                status: document.getElementById('ideaStatus').value,
+                createdAt: new Date().toISOString()
+            };
+
+            ideas.push(idea);
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+
+            e.target.reset();
+            renderIdeas();
+            updateDashboard();
+
+            alert('✅ Idea agregada correctamente');
+        }
+
+        function renderIdeas() {
+            const list = document.getElementById('ideasList');
+            let filtered = ideas;
+
+            if (currentFilter !== 'all') {
+                filtered = ideas.filter(i => i.priority === currentFilter);
+            }
+
+            if (filtered.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 3em; margin-bottom: 12px;">💭</div>
+                        <p>No hay ideas en esta categoría</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = filtered.map(idea => `
+                <div class="idea-item ${idea.priority}">
+                    <div class="idea-content">
+                        <div class="idea-header">
+                            <div class="idea-title">${idea.title}</div>
+                        </div>
+                        <div class="idea-badges">
+                            <span class="badge type-${idea.type}">${typeNames[idea.type] || idea.type}</span>
+                            <span class="badge">${idea.status}</span>
+                        </div>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="action-btn select" onclick="selectIdeaForAnalysis(${idea.id})">📊 Seleccionar</button>
+                        <button class="action-btn edit" onclick="openEditIdeaModal(${idea.id})">✏️ Editar</button>
+                        <button class="action-btn delete" onclick="deleteIdea(${idea.id})">🗑️ Eliminar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function deleteIdea(ideaId) {
+            if (confirm('¿Eliminar esta idea?')) {
+                ideas = ideas.filter(i => i.id !== ideaId);
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                renderIdeas();
+                updateDashboard();
+                if (selectedIdeaId === ideaId) {
+                    deselectIdea();
+                }
+            }
+        }
+
+        function updateDashboard() {
+            document.getElementById('totalIdeas').textContent = ideas.length;
+            document.getElementById('totalHigh').textContent = ideas.filter(i => i.priority === 'high').length;
+            document.getElementById('totalInProgress').textContent = ideas.filter(i => i.status === 'in-progress').length;
+            document.getElementById('totalCompleted').textContent = ideas.filter(i => i.status === 'completed').length;
+
+            updateCharts();
+        }
+
+        function initCharts() {
+            updateCharts();
+        }
+
+        function updateCharts() {
+            if (typeof Chart === 'undefined') {
+                console.info('Chart.js no esta disponible; se omite la renderizacion de graficas.');
+                return;
+            }
+
+            const types = {};
+            const statuses = {};
+
+            ideas.forEach(idea => {
+                types[idea.type] = (types[idea.type] || 0) + 1;
+                statuses[idea.status] = (statuses[idea.status] || 0) + 1;
+            });
+
+            // Type Chart
+            if (charts.type) {
+                charts.type.destroy();
+            }
+            const typeCtx = document.getElementById('typeChart');
+            charts.type = new Chart(typeCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(types).map(t => typeNames[t] || t),
+                    datasets: [{
+                        data: Object.values(types),
+                        backgroundColor: [
+                            'rgba(0, 107, 126, 0.7)',
+                            'rgba(91, 79, 139, 0.7)',
+                            'rgba(107, 138, 148, 0.7)',
+                            'rgba(122, 122, 122, 0.7)'
+                        ],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            if (charts.status) {
+                charts.status.destroy();
+            }
+            const statusCtx = document.getElementById('statusChart');
+            charts.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statuses),
+                    datasets: [{
+                        data: Object.values(statuses),
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.7)',
+                            'rgba(245, 158, 11, 0.7)',
+                            'rgba(239, 68, 68, 0.7)',
+                            'rgba(100, 116, 139, 0.7)'
+                        ],
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function checkMicrophonePermission() {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                alert('⚠️ Tu navegador no soporta acceso al micrófono');
+                return;
+            }
+
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    stream.getTracks().forEach(track => track.stop());
+                    alert('✅ Acceso al micrófono permitido');
+                })
+                .catch(err => {
+                    alert('⚠️ Acceso al micrófono denegado: ' + err.message);
+                });
+        }
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(choiceResult => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App instalada');
+                    }
+                    deferredPrompt = null;
+                });
+            } else {
+                alert('La app ya está instalada o no está disponible para instalar');
+            }
+        }
+    </script>
+</body>
+</html>
