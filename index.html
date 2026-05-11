@@ -281,6 +281,12 @@
             background: #dc2626;
         }
 
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8em;
+            margin: 0 4px;
+        }
+
         .btn-mic {
             padding: 8px 12px;
             background: linear-gradient(135deg, #006B7E, #5B4F8B);
@@ -350,37 +356,44 @@
             padding: 12px;
             margin-bottom: 12px;
             border-radius: 6px;
-            cursor: pointer;
             transition: all 0.3s ease;
             animation: slideIn 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
         }
 
         .idea-item:hover {
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            transform: translateX(4px);
         }
 
         .idea-item.high { border-left-color: var(--danger); }
         .idea-item.medium { border-left-color: var(--warning); }
         .idea-item.low { border-left-color: var(--secondary); }
 
+        .idea-content {
+            flex: 1;
+        }
+
         .idea-header {
             display: flex;
             justify-content: space-between;
             align-items: start;
             gap: 12px;
+            margin-bottom: 8px;
         }
 
         .idea-title {
             font-weight: 700;
             color: var(--dark);
-            margin-bottom: 4px;
         }
 
         .idea-badges {
             display: flex;
             gap: 6px;
             flex-wrap: wrap;
+            margin-top: 4px;
         }
 
         .badge {
@@ -397,6 +410,51 @@
         .badge.type-feature { background: rgba(91,79,139,0.1); color: var(--tertiary); border-color: var(--tertiary); }
         .badge.type-improvement { background: rgba(107,138,148,0.1); color: var(--secondary); border-color: var(--secondary); }
         .badge.type-research { background: rgba(123,122,122,0.1); color: var(--neutral); border-color: var(--neutral); }
+
+        .idea-actions {
+            display: flex;
+            gap: 6px;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            padding: 6px 10px;
+            font-size: 0.8em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .action-btn.select {
+            background: var(--success);
+            color: white;
+        }
+
+        .action-btn.select:hover {
+            background: #059669;
+        }
+
+        .action-btn.edit {
+            background: var(--primary);
+            color: white;
+        }
+
+        .action-btn.edit:hover {
+            background: var(--primary-dark);
+        }
+
+        .action-btn.delete {
+            background: var(--danger);
+            color: white;
+        }
+
+        .action-btn.delete:hover {
+            background: #dc2626;
+        }
 
         .dashboard-grid {
             display: grid;
@@ -527,30 +585,6 @@
             margin-top: 4px;
         }
 
-        .ai-insights {
-            background: linear-gradient(135deg, rgba(0,107,126,0.05), rgba(91,79,139,0.05));
-            border-left: 4px solid var(--primary);
-            padding: 16px;
-            border-radius: 6px;
-            margin: 16px 0;
-        }
-
-        .ai-insights h4 {
-            color: var(--primary);
-            margin-bottom: 8px;
-        }
-
-        .ai-insights p {
-            color: var(--text);
-            line-height: 1.5;
-            font-size: 0.95em;
-        }
-
-        .ai-insights.loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
         .loading-spinner {
             display: inline-block;
             width: 16px;
@@ -637,24 +671,14 @@
             margin-bottom: 20px;
         }
 
-        .idea-selector {
-            margin-bottom: 20px;
-        }
-
-        .idea-select-container {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-
-        .idea-select-container select {
-            flex: 1;
+        .ai-section.disabled {
+            opacity: 0.6;
+            pointer-events: none;
         }
 
         .selected-idea-info {
             background: white;
-            border: 2px solid rgba(0,107,126,0.2);
+            border: 2px solid var(--success);
             border-radius: 8px;
             padding: 16px;
             margin-bottom: 20px;
@@ -666,7 +690,7 @@
         }
 
         .selected-idea-info h4 {
-            color: var(--primary);
+            color: var(--success);
             margin-bottom: 12px;
             font-size: 1.1em;
         }
@@ -1020,51 +1044,50 @@
 
         <!-- AI Summary and Insights Section -->
         <div class="ai-section" id="aiSection" style="display: none;">
-            <h2>📊 Analisis con IA</h2>
+            <h2>📊 Análisis con IA</h2>
 
-            <div class="idea-selector">
-                <div class="idea-select-container">
-                    <label for="ideaToAnalyze" style="width: 100%; margin-bottom: 8px; display: block;">Selecciona la idea a analizar *</label>
-                    <select id="ideaToAnalyze" onchange="updateSelectedIdea()" style="flex: 1;">
-                        <option value="">-- Selecciona una idea --</option>
-                    </select>
-                </div>
-
-                <div class="selected-idea-info" id="selectedIdeaInfo">
-                    <h4 id="selectedIdeaTitle"></h4>
-                    <div class="idea-info-grid">
-                        <div class="idea-info-item">
-                            <label>Tipo</label>
-                            <div class="idea-info-item-value" id="selectedIdeaType"></div>
-                        </div>
-                        <div class="idea-info-item">
-                            <label>Prioridad</label>
-                            <div class="idea-info-item-value" id="selectedIdeaPriority"></div>
-                        </div>
-                        <div class="idea-info-item">
-                            <label>Estado</label>
-                            <div class="idea-info-item-value" id="selectedIdeaStatus"></div>
-                        </div>
-                        <div class="idea-info-item">
-                            <label>Descripción</label>
-                            <div class="idea-info-item-value" id="selectedIdeaDesc" style="font-size: 0.85em; max-height: 100px; overflow: hidden;"></div>
-                        </div>
+            <div class="selected-idea-info" id="selectedIdeaInfo">
+                <h4>✅ Idea Seleccionada: <span id="selectedIdeaTitle"></span></h4>
+                <div class="idea-info-grid">
+                    <div class="idea-info-item">
+                        <label>Tipo</label>
+                        <div class="idea-info-item-value" id="selectedIdeaType"></div>
+                    </div>
+                    <div class="idea-info-item">
+                        <label>Prioridad</label>
+                        <div class="idea-info-item-value" id="selectedIdeaPriority"></div>
+                    </div>
+                    <div class="idea-info-item">
+                        <label>Estado</label>
+                        <div class="idea-info-item-value" id="selectedIdeaStatus"></div>
+                    </div>
+                    <div class="idea-info-item">
+                        <label>Descripción</label>
+                        <div class="idea-info-item-value" id="selectedIdeaDesc" style="font-size: 0.85em; max-height: 100px; overflow: hidden;"></div>
                     </div>
                 </div>
+                <button class="btn-secondary" onclick="deselectIdea()" style="margin-top: 12px; width: 100%;">Seleccionar otra idea</button>
             </div>
 
-            <div class="model-selector">
-                <button class="model-btn active" data-model="FLASH_LITE" onclick="selectModel('FLASH_LITE')">
-                    ⚡ Gemini 3.1 Flash Lite (Rápido)
-                </button>
-                <button class="model-btn" data-model="PRO" onclick="selectModel('PRO')">
-                    🚀 Gemini 2.5 Pro (Potente)
-                </button>
+            <div id="aiNotSelected" style="display: block; text-align: center; padding: 40px 20px; color: var(--text-light);">
+                <div style="font-size: 3em; margin-bottom: 12px;">👆</div>
+                <p>Selecciona una idea de la lista para generar un análisis con IA</p>
             </div>
 
-            <button class="btn-primary" onclick="generateSummaryAndInsights()" style="width: 100%; margin-bottom: 20px;" id="generateBtn">
-                🤖 Generar Análisis con IA
-            </button>
+            <div id="aiControlsContainer" style="display: none;">
+                <div class="model-selector">
+                    <button class="model-btn active" data-model="FLASH_LITE" onclick="selectModel('FLASH_LITE')">
+                        ⚡ Gemini 3.1 Flash Lite (Rápido)
+                    </button>
+                    <button class="model-btn" data-model="PRO" onclick="selectModel('PRO')">
+                        🚀 Gemini 2.5 Pro (Potente)
+                    </button>
+                </div>
+
+                <button class="btn-primary" onclick="generateSummaryAndInsights()" style="width: 100%; margin-bottom: 20px;" id="generateBtn">
+                    🤖 Generar Análisis con IA
+                </button>
+            </div>
 
             <div id="summaryContainer" style="display: none;">
                 <!-- Resumen -->
@@ -1098,14 +1121,58 @@
         </div>
     </div>
 
-    <!-- Detail Modal -->
-    <div id="detailModal" class="modal">
+    <!-- Edit Idea Modal -->
+    <div id="editIdeaModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Detalle de Idea</h3>
-                <button class="close-btn" onclick="closeModal()">&times;</button>
+                <h3>✏️ Editar Idea</h3>
+                <button class="close-btn" onclick="closeEditIdeaModal()">&times;</button>
             </div>
-            <div id="modalBody"></div>
+            <form id="editIdeaForm">
+                <div class="form-group">
+                    <label for="editIdeaTitle">Titulo de la Idea *</label>
+                    <input type="text" id="editIdeaTitle" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaDesc">Descripcion *</label>
+                    <textarea id="editIdeaDesc" class="large" required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaType">Tipo de Idea *</label>
+                    <select id="editIdeaType" required>
+                        <option value="app">Aplicacion</option>
+                        <option value="feature">Feature/Mejora</option>
+                        <option value="improvement">Optimizacion</option>
+                        <option value="research">Investigacion</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaPriority">Prioridad *</label>
+                    <select id="editIdeaPriority" required>
+                        <option value="high">Alta</option>
+                        <option value="medium">Media</option>
+                        <option value="low">Baja</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="editIdeaStatus">Estado *</label>
+                    <select id="editIdeaStatus" required>
+                        <option value="idea">Idea</option>
+                        <option value="in-progress">En Progreso</option>
+                        <option value="completed">Completada</option>
+                        <option value="on-hold">En Pausa</option>
+                    </select>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-primary">💾 Guardar Cambios</button>
+                    <button type="button" class="btn-secondary" onclick="closeEditIdeaModal()">Cancelar</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -1206,6 +1273,7 @@
         let deferredPrompt = null;
         let selectedModel = 'FLASH_LITE';
         let selectedIdeaId = null;
+        let editingIdeaId = null;
 
         const typeNames = {
             'app': 'Aplicación',
@@ -1393,39 +1461,19 @@
                 statusEl.classList.remove('disconnected');
                 statusEl.classList.add('active');
                 aiSection.style.display = 'block';
-                updateIdeaSelector();
             } else {
                 statusEl.textContent = '⚠️ Gemini no configurado';
                 statusEl.classList.add('disconnected');
                 statusEl.classList.remove('active');
                 aiSection.style.display = 'none';
+                deselectIdea();
             }
         }
 
-        function updateIdeaSelector() {
-            const select = document.getElementById('ideaToAnalyze');
-            const currentValue = select.value;
-            
-            select.innerHTML = '<option value="">-- Selecciona una idea --</option>';
-            
-            ideas.forEach(idea => {
-                const option = document.createElement('option');
-                option.value = idea.id;
-                option.textContent = `${idea.title} (${typeNames[idea.type]})`;
-                select.appendChild(option);
-            });
-
-            select.value = currentValue;
-        }
-
-        function updateSelectedIdea() {
-            const select = document.getElementById('ideaToAnalyze');
-            const ideaId = parseInt(select.value);
-            const infoDiv = document.getElementById('selectedIdeaInfo');
-
-            if (!ideaId) {
-                infoDiv.classList.remove('show');
-                selectedIdeaId = null;
+        function selectIdeaForAnalysis(ideaId) {
+            if (!geminiConfig.isConfigured()) {
+                alert('⚠️ Primero debes configurar tu API Key de Gemini');
+                openGeminiConfigModal();
                 return;
             }
 
@@ -1439,7 +1487,23 @@
             document.getElementById('selectedIdeaStatus').textContent = idea.status;
             document.getElementById('selectedIdeaDesc').textContent = idea.description;
 
-            infoDiv.classList.add('show');
+            document.getElementById('selectedIdeaInfo').classList.add('show');
+            document.getElementById('aiNotSelected').style.display = 'none';
+            document.getElementById('aiControlsContainer').style.display = 'block';
+            document.getElementById('summaryContainer').style.display = 'none';
+            document.getElementById('aiLoading').style.display = 'none';
+
+            // Scroll to AI section
+            document.getElementById('aiSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function deselectIdea() {
+            selectedIdeaId = null;
+            document.getElementById('selectedIdeaInfo').classList.remove('show');
+            document.getElementById('aiNotSelected').style.display = 'block';
+            document.getElementById('aiControlsContainer').style.display = 'none';
+            document.getElementById('summaryContainer').style.display = 'none';
+            document.getElementById('aiLoading').style.display = 'none';
         }
 
         function selectModel(model) {
@@ -1580,6 +1644,45 @@ Formato JSON obligatorio:
             }
         }
 
+        // ==================== EDIT IDEA ====================
+        function openEditIdeaModal(ideaId) {
+            const idea = ideas.find(i => i.id === ideaId);
+            if (!idea) return;
+
+            editingIdeaId = idea.id;
+            document.getElementById('editIdeaTitle').value = idea.title;
+            document.getElementById('editIdeaDesc').value = idea.description;
+            document.getElementById('editIdeaType').value = idea.type;
+            document.getElementById('editIdeaPriority').value = idea.priority;
+            document.getElementById('editIdeaStatus').value = idea.status;
+
+            document.getElementById('editIdeaModal').classList.add('active');
+        }
+
+        function closeEditIdeaModal() {
+            document.getElementById('editIdeaModal').classList.remove('active');
+            editingIdeaId = null;
+        }
+
+        document.getElementById('editIdeaForm')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const idea = ideas.find(i => i.id === editingIdeaId);
+            if (!idea) return;
+
+            idea.title = document.getElementById('editIdeaTitle').value;
+            idea.description = document.getElementById('editIdeaDesc').value;
+            idea.type = document.getElementById('editIdeaType').value;
+            idea.priority = document.getElementById('editIdeaPriority').value;
+            idea.status = document.getElementById('editIdeaStatus').value;
+
+            localStorage.setItem('ideas', JSON.stringify(ideas));
+            renderIdeas();
+            updateDashboard();
+            closeEditIdeaModal();
+            alert('✅ Idea actualizada correctamente');
+        });
+
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
             loadHeaderCustomization();
@@ -1658,12 +1761,12 @@ Formato JSON obligatorio:
                 });
             });
 
-            document.getElementById('detailModal').addEventListener('click', (e) => {
-                if (e.target.id === 'detailModal') closeModal();
-            });
-
             document.getElementById('editHeaderModal').addEventListener('click', (e) => {
                 if (e.target.id === 'editHeaderModal') closeEditHeaderModal();
+            });
+
+            document.getElementById('editIdeaModal').addEventListener('click', (e) => {
+                if (e.target.id === 'editIdeaModal') closeEditIdeaModal();
             });
 
             document.getElementById('geminiConfigModal').addEventListener('click', (e) => {
@@ -1715,7 +1818,6 @@ Formato JSON obligatorio:
             e.target.reset();
             renderIdeas();
             updateDashboard();
-            updateIdeaSelector();
 
             alert('✅ Idea agregada correctamente');
         }
@@ -1739,80 +1841,23 @@ Formato JSON obligatorio:
             }
 
             list.innerHTML = filtered.map(idea => `
-                <div class="idea-item ${idea.priority}" onclick="showIdeaDetail(${idea.id})">
-                    <div class="idea-header">
-                        <div style="flex: 1;">
+                <div class="idea-item ${idea.priority}">
+                    <div class="idea-content">
+                        <div class="idea-header">
                             <div class="idea-title">${idea.title}</div>
-                            <div class="idea-badges">
-                                <span class="badge type-${idea.type}">${typeNames[idea.type] || idea.type}</span>
-                                <span class="badge">${idea.status}</span>
-                            </div>
                         </div>
+                        <div class="idea-badges">
+                            <span class="badge type-${idea.type}">${typeNames[idea.type] || idea.type}</span>
+                            <span class="badge">${idea.status}</span>
+                        </div>
+                    </div>
+                    <div class="idea-actions">
+                        <button class="action-btn select" onclick="selectIdeaForAnalysis(${idea.id})">📊 Seleccionar</button>
+                        <button class="action-btn edit" onclick="openEditIdeaModal(${idea.id})">✏️ Editar</button>
+                        <button class="action-btn delete" onclick="deleteIdea(${idea.id})">🗑️ Eliminar</button>
                     </div>
                 </div>
             `).join('');
-        }
-
-        function showIdeaDetail(ideaId) {
-            const idea = ideas.find(i => i.id === ideaId);
-            if (!idea) return;
-
-            const modal = document.getElementById('detailModal');
-            const body = document.getElementById('modalBody');
-
-            const createdDate = new Date(idea.createdAt).toLocaleDateString('es-ES');
-
-            body.innerHTML = `
-                <div class="idea-detail">
-                    <label>Titulo</label>
-                    <div class="idea-detail-value">${idea.title}</div>
-                </div>
-                <div class="idea-detail">
-                    <label>Descripcion</label>
-                    <div class="idea-detail-value" style="white-space: pre-wrap; max-height: 200px; overflow-y: auto;">${idea.description}</div>
-                </div>
-                <div class="idea-detail">
-                    <label>Tipo</label>
-                    <div class="idea-detail-value">${typeNames[idea.type] || idea.type}</div>
-                </div>
-                <div class="idea-detail">
-                    <label>Prioridad</label>
-                    <div class="idea-detail-value">${idea.priority}</div>
-                </div>
-                <div class="idea-detail">
-                    <label>Estado</label>
-                    <div class="idea-detail-value">${idea.status}</div>
-                </div>
-                <div class="idea-detail">
-                    <label>Creada</label>
-                    <div class="idea-detail-value">${createdDate}</div>
-                </div>
-                <div class="button-group">
-                    <button class="btn-secondary" onclick="editIdea(${idea.id})">Editar</button>
-                    <button class="btn-danger" onclick="deleteIdea(${idea.id})">Eliminar</button>
-                </div>
-            `;
-
-            modal.classList.add('active');
-        }
-
-        function closeModal() {
-            document.getElementById('detailModal').classList.remove('active');
-        }
-
-        function editIdea(ideaId) {
-            const idea = ideas.find(i => i.id === ideaId);
-            if (!idea) return;
-
-            document.getElementById('ideaTitle').value = idea.title;
-            document.getElementById('ideaDesc').value = idea.description;
-            document.getElementById('ideaType').value = idea.type;
-            document.getElementById('ideaPriority').value = idea.priority;
-            document.getElementById('ideaStatus').value = idea.status;
-
-            deleteIdea(ideaId);
-            closeModal();
-            document.getElementById('ideaTitle').focus();
         }
 
         function deleteIdea(ideaId) {
@@ -1821,8 +1866,9 @@ Formato JSON obligatorio:
                 localStorage.setItem('ideas', JSON.stringify(ideas));
                 renderIdeas();
                 updateDashboard();
-                updateIdeaSelector();
-                closeModal();
+                if (selectedIdeaId === ideaId) {
+                    deselectIdea();
+                }
             }
         }
 
