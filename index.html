@@ -2260,14 +2260,25 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                     document.getElementById('sheetsDownloadBtn').disabled = false;
                     return;
                 }
-                const imported = rows.filter(row => row[0] && row[1]).map(row => ({
-                    id: row[0], title: row[1], description: row[2] || '',
-                    type: row[3] || 'app', priority: row[4] || 'medium',
-                    status: row[5] || 'idea',
-                    aiResults: row[6] ? { summary: row[6], viability: { score: parseInt(row[7])||0, analysis:'' }, analyzedAt: row[8] || '' } : null,
-                    createdAt: row[9] || new Date().toISOString(),
-                    updatedAt: row[10] || ''
-                }));
+                const imported = rows.filter(row => row[0] && row[1]).map(row => {
+                    // Detecta si tiene estructura completa (11+ columnas) o incompleta
+                    const hasFull = row.length >= 11;
+                    return {
+                        id: row[0],
+                        title: row[1],
+                        description: hasFull ? (row[2] || '') : '',
+                        type: hasFull ? (row[3] || 'app') : 'app',
+                        priority: hasFull ? (row[4] || 'medium') : 'medium',
+                        status: hasFull ? (row[5] || 'idea') : 'idea',
+                        aiResults: hasFull && row[6] ? {
+                            summary: row[6],
+                            viability: { score: parseInt(row[7])||0, analysis:'' },
+                            analyzedAt: row[8] || ''
+                        } : null,
+                        createdAt: hasFull ? (row[9] || new Date().toISOString()) : (row[2] || new Date().toISOString()),
+                        updatedAt: hasFull ? (row[10] || '') : (row[3] || '')
+                    };
+                });
                 ideas = imported;
                 localStorage.setItem('ideas', JSON.stringify(ideas));
                 renderIdeas(); updateDashboard();
