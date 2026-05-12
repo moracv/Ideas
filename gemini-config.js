@@ -9,7 +9,7 @@ class GeminiConfig {
         this.API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
         this.MODELS = {
             PRO: 'gemini-2.5-pro',
-            FLASH_LITE: 'gemini-2.0-flash-lite'
+            FLASH_LITE: 'gemini-2.0-flash'
         };
         this.config = this.loadConfig();
     }
@@ -125,7 +125,7 @@ class GeminiConfig {
     getAvailableModels() {
         return [
             { id: 'PRO', name: 'Gemini 2.5 Pro', description: 'Modelo más potente y preciso', value: this.MODELS.PRO },
-            { id: 'FLASH_LITE', name: 'Gemini 2.0 Flash Lite', description: 'Modelo rápido y ligero', value: this.MODELS.FLASH_LITE }
+            { id: 'FLASH_LITE', name: 'Gemini 2.0 Flash', description: 'Modelo rápido y ligero', value: this.MODELS.FLASH_LITE }
         ];
     }
 }
