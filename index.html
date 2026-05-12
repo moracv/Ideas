@@ -1296,6 +1296,13 @@
                 </p>
             </div>
             <div class="form-group">
+                <label for="sheetsSheetId">Sheet ID</label>
+                <input type="text" id="sheetsSheetId" placeholder="1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts" autocomplete="off">
+                <p style="font-size:0.82em; color:var(--text-light); margin-top:5px;">
+                    Copia de la URL de tu Google Sheet: <code>sheets.google.com/d/<strong>AQUI_ESTA_EL_ID</strong>/edit</code>
+                </p>
+            </div>
+            <div class="form-group">
                 <label for="sheetsSheetName">Nombre de la pestaña</label>
                 <input type="text" id="sheetsSheetName" placeholder="Ideas" value="Ideas">
             </div>
@@ -2132,6 +2139,7 @@ Devuelve SOLO este JSON (válido y sin comentarios):
         function loadSheetsCfg() {
             document.getElementById('sheetsApiKey').value = localStorage.getItem('ideas_sheets_apikey') || '';
             document.getElementById('sheetsScriptUrl').value = localStorage.getItem('ideas_sheets_script') || '';
+            document.getElementById('sheetsSheetId').value = localStorage.getItem('ideas_sheets_id') || '1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts';
             document.getElementById('sheetsSheetName').value = localStorage.getItem('ideas_sheets_name') || 'Ideas';
         }
 
@@ -2157,6 +2165,11 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                 bar.style.borderColor = 'var(--success)';
                 bar.textContent = '✅ Configurado' + (hasSheetsScript() ? ' · Lectura y escritura' : ' · Solo lectura');
                 actions.style.display = 'block';
+                // Actualiza el display del Sheet ID configurado
+                const sheetId = localStorage.getItem('ideas_sheets_id') || '1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts';
+                const sheetName = localStorage.getItem('ideas_sheets_name') || 'Ideas';
+                const sheetDisplay = document.querySelector('[style*="font-weight:600"]');
+                if (sheetDisplay) sheetDisplay.textContent = '📄 ' + sheetName + ' (' + sheetId.slice(-12) + ')';
             } else {
                 bar.style.background = 'rgba(239,68,68,0.1)';
                 bar.style.color = 'var(--danger)';
@@ -2171,10 +2184,13 @@ Devuelve SOLO este JSON (válido y sin comentarios):
         function saveSheetsCfg() {
             const apiKey = document.getElementById('sheetsApiKey').value.trim();
             const scriptUrl = document.getElementById('sheetsScriptUrl').value.trim();
+            const sheetId = document.getElementById('sheetsSheetId').value.trim();
             const sheetName = document.getElementById('sheetsSheetName').value.trim() || 'Ideas';
             if (!apiKey) { alert('⚠️ La API Key es obligatoria para leer el sheet'); return; }
+            if (!sheetId) { alert('⚠️ El Sheet ID es obligatorio'); return; }
             localStorage.setItem('ideas_sheets_apikey', apiKey);
             if (scriptUrl) localStorage.setItem('ideas_sheets_script', scriptUrl);
+            localStorage.setItem('ideas_sheets_id', sheetId);
             localStorage.setItem('ideas_sheets_name', sheetName);
             refreshSheetsUI();
         }
@@ -2239,11 +2255,12 @@ Devuelve SOLO este JSON (válido y sin comentarios):
         async function sheetsDownload() {
             if (!hasSheetsApiKey()) { alert('⚠️ Configura la API Key primero'); return; }
             const apiKey = localStorage.getItem('ideas_sheets_apikey');
+            const sheetId = localStorage.getItem('ideas_sheets_id') || '1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts';
             const sheetName = localStorage.getItem('ideas_sheets_name') || 'Ideas';
             document.getElementById('sheetsDownloadBtn').disabled = true;
             showSheetsResult('⏳ Descargando ideas...');
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}/values/${encodeURIComponent(sheetName + '!A:K')}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(sheetName + '!A:K')}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`;
                 console.log('Sheets URL:', url);
                 const r = await fetch(url);
                 if (!r.ok) {
