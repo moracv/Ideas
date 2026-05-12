@@ -20,7 +20,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27100%27%20height=%27100%2[...]
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20180%20180%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27180%27%20hei[...]
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="./gemini-config.js"></script>
     <script src="./google-sheets-sync.js"></script>
     <script src="https://accounts.google.com/gsi/client" async></script>
@@ -1700,13 +1700,18 @@ Formato JSON obligatorio:
                     throw new Error('No se recibió respuesta de Gemini');
                 }
 
-                // Parsear JSON
-                const jsonMatch = content.match(/\{[\s\S]*\}/);
-                if (!jsonMatch) {
-                    throw new Error('Respuesta en formato inválido');
+                // Parsear JSON - primero intenta todo, luego busca dentro del texto
+                let result;
+                try {
+                    result = JSON.parse(content);
+                } catch {
+                    // Busca JSON dentro del texto
+                    const jsonMatch = content.match(/\{[\s\S]*\}/);
+                    if (!jsonMatch) {
+                        throw new Error('Respuesta en formato inválido');
+                    }
+                    result = JSON.parse(jsonMatch[0]);
                 }
-
-                const result = JSON.parse(jsonMatch[0]);
 
                 // Mostrar resultados
                 document.getElementById('summaryText').textContent = result.summary;
