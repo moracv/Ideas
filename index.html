@@ -22,6 +22,8 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="./gemini-config.js"></script>
+    <script src="./google-sheets-sync.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async></script>
 
     <style>
         * {
@@ -909,6 +911,7 @@
             <div class="header-buttons">
                 <button class="header-btn outline" onclick="openEditHeaderModal()">Editar Titulo</button>
                 <button class="header-btn outline" onclick="openGeminiConfigModal()">⚙️ Configurar Gemini</button>
+                <button class="header-btn outline" onclick="openSheetsModal()">📊 Google Sheets</button>
                 <button class="header-btn outline" onclick="checkMicrophonePermission()">Verificar Microfono</button>
                 <button class="header-btn" onclick="installApp()">Instalar App</button>
             </div>
@@ -1249,6 +1252,57 @@
         </div>
     </div>
 
+    <!-- Google Sheets Modal -->
+    <div id="sheetsModal" class="modal">
+        <div class="modal-content" style="max-width: 560px;">
+            <div class="modal-header">
+                <h3>📊 Google Sheets — Sincronización</h3>
+                <button class="close-btn" onclick="closeSheetsModal()">&times;</button>
+            </div>
+
+            <div id="sheetsStatusBar" style="padding: 10px 14px; border-radius: 8px; margin-bottom: 18px; font-weight: 600; font-size: 0.9em; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid var(--danger);">
+                ❌ No conectado
+            </div>
+
+            <div id="sheetsStep1">
+                <div style="background: rgba(0,107,126,0.07); padding: 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.88em; line-height: 1.7; color: var(--text);">
+                    <strong>¿Cómo obtener el Client ID?</strong><br>
+                    1. Ve a <a href="https://console.cloud.google.com" target="_blank" style="color:var(--primary)">console.cloud.google.com</a><br>
+                    2. Habilita la <strong>Google Sheets API</strong><br>
+                    3. Credenciales → <strong>Crear ID de cliente OAuth 2.0</strong> (tipo: Aplicación web)<br>
+                    4. Agrega tu URL como <strong>Origen JavaScript autorizado</strong><br>
+                    5. Copia el <strong>Client ID</strong> y pégalo aquí
+                </div>
+                <div class="form-group">
+                    <label for="sheetsClientId">Client ID de OAuth 2.0 *</label>
+                    <input type="text" id="sheetsClientId" placeholder="XXXXXXXXXX.apps.googleusercontent.com" autocomplete="off">
+                </div>
+                <div class="button-group">
+                    <button class="btn-primary" onclick="connectGoogleSheets()">🔑 Conectar con Google</button>
+                    <button class="btn-secondary" onclick="closeSheetsModal()">Cancelar</button>
+                </div>
+            </div>
+
+            <div id="sheetsStep2" style="display:none;">
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size:0.85em; color:var(--text-light);">Hoja de cálculo vinculada</label>
+                    <div style="font-weight:600; color:var(--dark); font-size:0.9em;">
+                        📄 Ideas (1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts)
+                    </div>
+                </div>
+                <div style="display:grid; gap:10px;">
+                    <button class="btn-primary" onclick="sheetsUpload()" id="sheetsUploadBtn">⬆️ Guardar ideas en Sheets</button>
+                    <button class="btn-secondary" onclick="sheetsDownload()" id="sheetsDownloadBtn">⬇️ Cargar ideas desde Sheets</button>
+                    <button class="btn-secondary" onclick="sheetsSync()" id="sheetsSyncBtn">🔄 Sincronizar (merge bidireccional)</button>
+                </div>
+                <div id="sheetsOpResult" style="display:none; margin-top:14px; padding:12px; border-radius:8px; font-size:0.9em; font-weight:600;"></div>
+                <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px;">
+                    <button class="btn-danger" onclick="disconnectSheets()" style="width:100%;">Desconectar cuenta Google</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ==================== SERVICE WORKER ====================
         if ('serviceWorker' in navigator) {
@@ -1492,6 +1546,7 @@
             document.getElementById('aiControlsContainer').style.display = 'block';
             document.getElementById('summaryContainer').style.display = 'none';
             document.getElementById('aiLoading').style.display = 'none';
+            document.getElementById('generateBtn').disabled = false;
 
             // Scroll to AI section
             document.getElementById('aiSection').scrollIntoView({ behavior: 'smooth' });
@@ -1635,6 +1690,7 @@ Formato JSON obligatorio:
 
                 loadingDiv.style.display = 'none';
                 summaryContainer.style.display = 'block';
+                generateBtn.disabled = false;
 
             } catch (error) {
                 console.error('Error:', error);
@@ -1771,6 +1827,10 @@ Formato JSON obligatorio:
 
             document.getElementById('geminiConfigModal').addEventListener('click', (e) => {
                 if (e.target.id === 'geminiConfigModal') closeGeminiConfigModal();
+            });
+
+            document.getElementById('sheetsModal').addEventListener('click', (e) => {
+                if (e.target.id === 'sheetsModal') closeSheetsModal();
             });
         }
 
@@ -1991,6 +2051,155 @@ Formato JSON obligatorio:
                 });
             } else {
                 alert('La app ya está instalada o no está disponible para instalar');
+            }
+        }
+
+        // ==================== GOOGLE SHEETS OAUTH ====================
+        // Token en memoria únicamente — nunca en localStorage — expira en 1h automáticamente
+        let googleAccessToken = null;
+        let sheetsTokenClient = null;
+        let pendingSheetsAction = null;
+
+        function openSheetsModal() {
+            refreshSheetsUI();
+            document.getElementById('sheetsModal').classList.add('active');
+        }
+
+        function closeSheetsModal() {
+            document.getElementById('sheetsModal').classList.remove('active');
+        }
+
+        function refreshSheetsUI() {
+            const bar = document.getElementById('sheetsStatusBar');
+            const step1 = document.getElementById('sheetsStep1');
+            const step2 = document.getElementById('sheetsStep2');
+            const result = document.getElementById('sheetsOpResult');
+            if (result) result.style.display = 'none';
+
+            if (googleAccessToken) {
+                bar.style.background = 'rgba(16,185,129,0.1)';
+                bar.style.color = 'var(--success)';
+                bar.style.borderColor = 'var(--success)';
+                bar.textContent = '✅ Conectado con Google';
+                step1.style.display = 'none';
+                step2.style.display = 'block';
+            } else {
+                bar.style.background = 'rgba(239,68,68,0.1)';
+                bar.style.color = 'var(--danger)';
+                bar.style.borderColor = 'var(--danger)';
+                bar.textContent = '❌ No conectado';
+                step1.style.display = 'block';
+                step2.style.display = 'none';
+                const savedClientId = localStorage.getItem('sheets_client_id');
+                if (savedClientId) document.getElementById('sheetsClientId').value = savedClientId;
+            }
+        }
+
+        function connectGoogleSheets() {
+            const clientId = document.getElementById('sheetsClientId').value.trim();
+            if (!clientId) {
+                alert('⚠️ Ingresa el Client ID de OAuth 2.0');
+                return;
+            }
+            if (typeof google === 'undefined' || !google.accounts) {
+                alert('⚠️ La librería de Google aún no cargó. Espera un momento e intenta de nuevo.');
+                return;
+            }
+            localStorage.setItem('sheets_client_id', clientId);
+            sheetsTokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: clientId,
+                scope: 'https://www.googleapis.com/auth/spreadsheets',
+                callback: (response) => {
+                    if (response.error) {
+                        alert('❌ Error de autenticación: ' + response.error);
+                        return;
+                    }
+                    googleAccessToken = response.access_token;
+                    refreshSheetsUI();
+                    if (pendingSheetsAction) {
+                        const action = pendingSheetsAction;
+                        pendingSheetsAction = null;
+                        action();
+                    }
+                }
+            });
+            sheetsTokenClient.requestAccessToken({ prompt: 'consent' });
+        }
+
+        function disconnectSheets() {
+            if (googleAccessToken && typeof google !== 'undefined') {
+                google.accounts.oauth2.revoke(googleAccessToken);
+            }
+            googleAccessToken = null;
+            sheetsTokenClient = null;
+            refreshSheetsUI();
+        }
+
+        function showSheetsResult(msg, isError = false) {
+            const el = document.getElementById('sheetsOpResult');
+            el.style.display = 'block';
+            el.style.background = isError ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)';
+            el.style.color = isError ? 'var(--danger)' : 'var(--success)';
+            el.textContent = msg;
+        }
+
+        function setSheetsButtonsDisabled(disabled) {
+            ['sheetsUploadBtn', 'sheetsDownloadBtn', 'sheetsSyncBtn'].forEach(id => {
+                document.getElementById(id).disabled = disabled;
+            });
+        }
+
+        async function sheetsUpload() {
+            if (!googleAccessToken) { pendingSheetsAction = sheetsUpload; connectGoogleSheets(); return; }
+            setSheetsButtonsDisabled(true);
+            showSheetsResult('⏳ Subiendo ideas...');
+            const result = await googleSheetsSync.uploadIdeas(ideas, googleAccessToken);
+            setSheetsButtonsDisabled(false);
+            if (result.success) {
+                showSheetsResult('✅ ' + ideas.length + ' ideas guardadas en Google Sheets');
+            } else {
+                if (result.error && result.error.includes('401')) {
+                    googleAccessToken = null; refreshSheetsUI();
+                    alert('⚠️ Sesión expirada. Vuelve a conectar con Google.');
+                } else { showSheetsResult('❌ Error: ' + result.error, true); }
+            }
+        }
+
+        async function sheetsDownload() {
+            if (!googleAccessToken) { pendingSheetsAction = sheetsDownload; connectGoogleSheets(); return; }
+            setSheetsButtonsDisabled(true);
+            showSheetsResult('⏳ Descargando ideas...');
+            const result = await googleSheetsSync.downloadIdeas(googleAccessToken);
+            setSheetsButtonsDisabled(false);
+            if (result.success) {
+                ideas = result.ideas;
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                renderIdeas(); updateDashboard();
+                showSheetsResult('✅ ' + ideas.length + ' ideas cargadas desde Google Sheets');
+            } else {
+                if (result.error && result.error.includes('401')) {
+                    googleAccessToken = null; refreshSheetsUI();
+                    alert('⚠️ Sesión expirada. Vuelve a conectar con Google.');
+                } else { showSheetsResult('❌ Error: ' + result.error, true); }
+            }
+        }
+
+        async function sheetsSync() {
+            if (!googleAccessToken) { pendingSheetsAction = sheetsSync; connectGoogleSheets(); return; }
+            setSheetsButtonsDisabled(true);
+            showSheetsResult('⏳ Sincronizando...');
+            const result = await googleSheetsSync.syncIdeas(ideas, googleAccessToken);
+            setSheetsButtonsDisabled(false);
+            if (result.success) {
+                ideas = result.ideas;
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                renderIdeas(); updateDashboard();
+                showSheetsResult('✅ ' + result.message);
+            } else {
+                if (result.error && result.error.includes('401')) {
+                    googleAccessToken = null; refreshSheetsUI();
+                    alert('⚠️ Sesión expirada. Vuelve a conectar con Google.');
+                } else { showSheetsResult('❌ Error: ' + result.error, true); }
             }
         }
     </script>
