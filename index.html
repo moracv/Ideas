@@ -1703,14 +1703,14 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                     throw new Error('No se recibió respuesta de Gemini');
                 }
 
-                // Parsear JSON: eliminar markdown code fences y extraer JSON
+                // Parsear JSON: eliminar markdown code fences, escapar saltos de línea en strings
                 let result;
                 let jsonStr = content.trim();
 
                 // Eliminar bloques ```json ... ``` o ``` ... ```
                 jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
 
-                // Si aún no empieza con {, busca el primer { y último }
+                // Si no empieza con {, extraer entre primer { y último }
                 if (!jsonStr.startsWith('{')) {
                     const start = jsonStr.indexOf('{');
                     const end = jsonStr.lastIndexOf('}');
@@ -1721,10 +1721,27 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                     jsonStr = jsonStr.substring(start, end + 1);
                 }
 
+                // Escapar saltos de línea literales dentro de strings JSON
+                jsonStr = (function fixJsonStrings(s) {
+                    let out = '', inStr = false, esc = false;
+                    for (let i = 0; i < s.length; i++) {
+                        const c = s[i];
+                        if (esc) { out += c; esc = false; continue; }
+                        if (c === '\\') { esc = true; out += c; continue; }
+                        if (c === '"') { inStr = !inStr; out += c; continue; }
+                        if (inStr && c === '\n') { out += '\\n'; continue; }
+                        if (inStr && c === '\r') { continue; }
+                        if (inStr && c === '\t') { out += '\\t'; continue; }
+                        out += c;
+                    }
+                    return out;
+                })(jsonStr);
+
                 try {
                     result = JSON.parse(jsonStr);
                 } catch (parseErr) {
-                    console.error('Error parseando JSON:', parseErr.message, jsonStr.substring(0, 300));
+                    console.error('Error parseando JSON:', parseErr.message);
+                    console.error('JSON string (inicio):', jsonStr.substring(0, 400));
                     throw new Error('Formato de respuesta inválido: ' + parseErr.message);
                 }
 
