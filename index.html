@@ -1729,27 +1729,84 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                     jsonStr = jsonStr.substring(start, end + 1);
                 }
 
-                // Escapar saltos de línea literales dentro de strings JSON
-                jsonStr = (function fixJsonStrings(s) {
+                // Función para escapar caracteres problemáticos en strings JSON
+                const fixJsonStrings = (s) => {
                     let out = '', inStr = false, esc = false;
                     for (let i = 0; i < s.length; i++) {
                         const c = s[i];
-                        if (esc) { out += c; esc = false; continue; }
-                        if (c === '\\') { esc = true; out += c; continue; }
-                        if (c === '"') { inStr = !inStr; out += c; continue; }
-                        if (inStr && c === '\n') { out += '\\n'; continue; }
-                        if (inStr && c === '\r') { continue; }
-                        if (inStr && c === '\t') { out += '\\t'; continue; }
+
+                        if (esc) {
+                            out += c;
+                            esc = false;
+                            continue;
+                        }
+
+                        if (c === '\\') {
+                            esc = true;
+                            out += c;
+                            continue;
+                        }
+
+                        if (c === '"') {
+                            inStr = !inStr;
+                            out += c;
+                            continue;
+                        }
+
+                        if (inStr) {
+                            // Escapar caracteres especiales dentro de strings
+                            if (c === '\n') {
+                                out += '\\n';
+                                continue;
+                            }
+                            if (c === '\r') {
+                                out += '\\r';
+                                continue;
+                            }
+                            if (c === '\t') {
+                                out += '\\t';
+                                continue;
+                            }
+                            if (c === '\b') {
+                                out += '\\b';
+                                continue;
+                            }
+                            if (c === '\f') {
+                                out += '\\f';
+                                continue;
+                            }
+                            // Reemplazar caracteres de comillas tipográficas por comillas normales
+                            if (c === '"' || c === '"' || c === '"') {
+                                out += '\\"';
+                                continue;
+                            }
+                        }
+
                         out += c;
                     }
                     return out;
-                })(jsonStr);
+                };
+
+                jsonStr = fixJsonStrings(jsonStr);
 
                 try {
                     result = JSON.parse(jsonStr);
                 } catch (parseErr) {
                     console.error('Error parseando JSON:', parseErr.message);
                     console.error('JSON string (inicio):', jsonStr.substring(0, 400));
+
+                    // Mostrar contexto alrededor del error
+                    const match = parseErr.message.match(/position (\d+)/);
+                    if (match) {
+                        const pos = parseInt(match[1]);
+                        const start = Math.max(0, pos - 100);
+                        const end = Math.min(jsonStr.length, pos + 100);
+                        console.error(`Contexto alrededor de posición ${pos}:`);
+                        console.error(jsonStr.substring(start, end));
+                        console.error(' '.repeat(pos - start) + '^');
+                    }
+
+                    console.error('JSON completo:', jsonStr);
                     throw new Error('Formato de respuesta inválido: ' + parseErr.message);
                 }
 
