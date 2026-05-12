@@ -1093,6 +1093,9 @@
             </div>
 
             <div id="summaryContainer" style="display: none;">
+                <!-- Timestamp del análisis guardado -->
+                <div id="aiResultTimestamp" style="font-size:0.82em; color:var(--success); margin-bottom:12px; font-weight:600;"></div>
+
                 <!-- Resumen -->
                 <div class="summary-box">
                     <h4>📝 Resumen Ejecutivo</h4>
@@ -1252,7 +1255,7 @@
         </div>
     </div>
 
-    <!-- Google Sheets Modal -->
+    <!-- Google Sheets Modal (Apps Script method) -->
     <div id="sheetsModal" class="modal">
         <div class="modal-content" style="max-width: 560px;">
             <div class="modal-header">
@@ -1261,44 +1264,44 @@
             </div>
 
             <div id="sheetsStatusBar" style="padding: 10px 14px; border-radius: 8px; margin-bottom: 18px; font-weight: 600; font-size: 0.9em; background: rgba(239,68,68,0.1); color: var(--danger); border: 1px solid var(--danger);">
-                ❌ No conectado
+                ❌ No configurado
             </div>
 
-            <div id="sheetsStep1">
-                <div style="background: rgba(0,107,126,0.07); padding: 14px; border-radius: 8px; margin-bottom: 16px; font-size: 0.88em; line-height: 1.7; color: var(--text);">
-                    <strong>¿Cómo obtener el Client ID?</strong><br>
-                    1. Ve a <a href="https://console.cloud.google.com" target="_blank" style="color:var(--primary)">console.cloud.google.com</a><br>
-                    2. Habilita la <strong>Google Sheets API</strong><br>
-                    3. Credenciales → <strong>Crear ID de cliente OAuth 2.0</strong> (tipo: Aplicación web)<br>
-                    4. Agrega tu URL como <strong>Origen JavaScript autorizado</strong><br>
-                    5. Copia el <strong>Client ID</strong> y pégalo aquí
-                </div>
-                <div class="form-group">
-                    <label for="sheetsClientId">Client ID de OAuth 2.0 *</label>
-                    <input type="text" id="sheetsClientId" placeholder="XXXXXXXXXX.apps.googleusercontent.com" autocomplete="off">
-                </div>
-                <div class="button-group">
-                    <button class="btn-primary" onclick="connectGoogleSheets()">🔑 Conectar con Google</button>
-                    <button class="btn-secondary" onclick="closeSheetsModal()">Cancelar</button>
-                </div>
+            <!-- Configuración -->
+            <div class="form-group">
+                <label for="sheetsApiKey">API Key de Google (para leer)</label>
+                <input type="text" id="sheetsApiKey" placeholder="AIzaSy..." autocomplete="off">
+                <p style="font-size:0.82em; color:var(--text-light); margin-top:5px;">
+                    <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--primary)">Obtener en Google Cloud Console</a> · Habilitar Google Sheets API
+                </p>
+            </div>
+            <div class="form-group">
+                <label for="sheetsScriptUrl">URL Apps Script (para escribir)</label>
+                <input type="text" id="sheetsScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+                <p style="font-size:0.82em; color:var(--text-light); margin-top:5px;">
+                    El script ya está en tu hoja de cálculo de tareas6 — puedes usar el mismo o crear uno nuevo en Extensiones → Apps Script.
+                </p>
+            </div>
+            <div class="form-group">
+                <label for="sheetsSheetName">Nombre de la pestaña</label>
+                <input type="text" id="sheetsSheetName" placeholder="Ideas" value="Ideas">
+            </div>
+            <div class="button-group" style="margin-bottom: 20px;">
+                <button class="btn-primary" onclick="saveSheetsCfg()">💾 Guardar configuración</button>
+                <button class="btn-secondary" onclick="closeSheetsModal()">Cancelar</button>
             </div>
 
-            <div id="sheetsStep2" style="display:none;">
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="font-size:0.85em; color:var(--text-light);">Hoja de cálculo vinculada</label>
-                    <div style="font-weight:600; color:var(--dark); font-size:0.9em;">
-                        📄 Ideas (1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts)
-                    </div>
+            <!-- Acciones (se muestran si hay configuración) -->
+            <div id="sheetsActions" style="display:none; border-top:1px solid var(--border); padding-top:16px;">
+                <div class="form-group" style="margin-bottom:14px;">
+                    <label style="font-size:0.85em; color:var(--text-light);">Hoja vinculada</label>
+                    <div style="font-weight:600; color:var(--dark); font-size:0.9em;">📄 Ideas (1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts)</div>
                 </div>
                 <div style="display:grid; gap:10px;">
                     <button class="btn-primary" onclick="sheetsUpload()" id="sheetsUploadBtn">⬆️ Guardar ideas en Sheets</button>
                     <button class="btn-secondary" onclick="sheetsDownload()" id="sheetsDownloadBtn">⬇️ Cargar ideas desde Sheets</button>
-                    <button class="btn-secondary" onclick="sheetsSync()" id="sheetsSyncBtn">🔄 Sincronizar (merge bidireccional)</button>
                 </div>
                 <div id="sheetsOpResult" style="display:none; margin-top:14px; padding:12px; border-radius:8px; font-size:0.9em; font-weight:600;"></div>
-                <div style="margin-top:16px; border-top:1px solid var(--border); padding-top:14px;">
-                    <button class="btn-danger" onclick="disconnectSheets()" style="width:100%;">Desconectar cuenta Google</button>
-                </div>
             </div>
         </div>
     </div>
@@ -1544,12 +1547,36 @@
             document.getElementById('selectedIdeaInfo').classList.add('show');
             document.getElementById('aiNotSelected').style.display = 'none';
             document.getElementById('aiControlsContainer').style.display = 'block';
-            document.getElementById('summaryContainer').style.display = 'none';
             document.getElementById('aiLoading').style.display = 'none';
             document.getElementById('generateBtn').disabled = false;
 
+            // Restaurar análisis guardado si existe
+            if (idea.aiResults) {
+                showAIResults(idea.aiResults);
+                const ts = document.getElementById('aiResultTimestamp');
+                if (ts) ts.textContent = '💾 Análisis guardado · ' + new Date(idea.aiResults.analyzedAt).toLocaleString('es', {dateStyle:'short', timeStyle:'short'});
+            } else {
+                document.getElementById('summaryContainer').style.display = 'none';
+            }
+
             // Scroll to AI section
             document.getElementById('aiSection').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function showAIResults(aiResults) {
+            document.getElementById('summaryText').textContent = aiResults.summary;
+            document.getElementById('viabilityText').textContent = aiResults.viability.analysis;
+            const score = aiResults.viability.score || 0;
+            const bar = document.getElementById('viabilityBar');
+            bar.style.width = score + '%';
+            bar.textContent = score + '%';
+            document.getElementById('insightsContainer').innerHTML = aiResults.insights.map(i => `
+                <div class="insight-card">
+                    <div class="insight-icon">${i.icon}</div>
+                    <h4>${i.title}</h4>
+                    <p>${i.description}</p>
+                </div>`).join('');
+            document.getElementById('summaryContainer').style.display = 'block';
         }
 
         function deselectIdea() {
@@ -1691,6 +1718,18 @@ Formato JSON obligatorio:
                 loadingDiv.style.display = 'none';
                 summaryContainer.style.display = 'block';
                 generateBtn.disabled = false;
+
+                // Guardar análisis en la idea (localStorage)
+                idea.aiResults = {
+                    summary: result.summary,
+                    viability: result.viability,
+                    insights: result.insights,
+                    analyzedAt: new Date().toISOString()
+                };
+                localStorage.setItem('ideas', JSON.stringify(ideas));
+                // Mostrar timestamp
+                const ts = document.getElementById('aiResultTimestamp');
+                if (ts) ts.textContent = '💾 Guardado · ' + new Date().toLocaleString('es', {dateStyle:'short', timeStyle:'short'});
 
             } catch (error) {
                 console.error('Error:', error);
@@ -2054,13 +2093,21 @@ Formato JSON obligatorio:
             }
         }
 
-        // ==================== GOOGLE SHEETS OAUTH ====================
-        // Token en memoria únicamente — nunca en localStorage — expira en 1h automáticamente
-        let googleAccessToken = null;
-        let sheetsTokenClient = null;
-        let pendingSheetsAction = null;
+        // ==================== GOOGLE SHEETS (Apps Script method) ====================
+        const SHEETS_ID = '1yonePNK1fyNYycLAt_D_h1YybMHpA4ZBgMxb_dFYsts';
+        const HEADERS = ['id','title','description','type','priority','status','summary','viability','analyzedAt','createdAt','updatedAt'];
+
+        function loadSheetsCfg() {
+            document.getElementById('sheetsApiKey').value = localStorage.getItem('ideas_sheets_apikey') || '';
+            document.getElementById('sheetsScriptUrl').value = localStorage.getItem('ideas_sheets_script') || '';
+            document.getElementById('sheetsSheetName').value = localStorage.getItem('ideas_sheets_name') || 'Ideas';
+        }
+
+        function hasSheetsApiKey() { return !!localStorage.getItem('ideas_sheets_apikey'); }
+        function hasSheetsScript() { return !!localStorage.getItem('ideas_sheets_script'); }
 
         function openSheetsModal() {
+            loadSheetsCfg();
             refreshSheetsUI();
             document.getElementById('sheetsModal').classList.add('active');
         }
@@ -2071,67 +2118,32 @@ Formato JSON obligatorio:
 
         function refreshSheetsUI() {
             const bar = document.getElementById('sheetsStatusBar');
-            const step1 = document.getElementById('sheetsStep1');
-            const step2 = document.getElementById('sheetsStep2');
-            const result = document.getElementById('sheetsOpResult');
-            if (result) result.style.display = 'none';
-
-            if (googleAccessToken) {
+            const actions = document.getElementById('sheetsActions');
+            if (hasSheetsApiKey()) {
                 bar.style.background = 'rgba(16,185,129,0.1)';
                 bar.style.color = 'var(--success)';
                 bar.style.borderColor = 'var(--success)';
-                bar.textContent = '✅ Conectado con Google';
-                step1.style.display = 'none';
-                step2.style.display = 'block';
+                bar.textContent = '✅ Configurado' + (hasSheetsScript() ? ' · Lectura y escritura' : ' · Solo lectura');
+                actions.style.display = 'block';
             } else {
                 bar.style.background = 'rgba(239,68,68,0.1)';
                 bar.style.color = 'var(--danger)';
                 bar.style.borderColor = 'var(--danger)';
-                bar.textContent = '❌ No conectado';
-                step1.style.display = 'block';
-                step2.style.display = 'none';
-                const savedClientId = localStorage.getItem('sheets_client_id');
-                if (savedClientId) document.getElementById('sheetsClientId').value = savedClientId;
+                bar.textContent = '❌ No configurado';
+                actions.style.display = 'none';
             }
+            const result = document.getElementById('sheetsOpResult');
+            if (result) result.style.display = 'none';
         }
 
-        function connectGoogleSheets() {
-            const clientId = document.getElementById('sheetsClientId').value.trim();
-            if (!clientId) {
-                alert('⚠️ Ingresa el Client ID de OAuth 2.0');
-                return;
-            }
-            if (typeof google === 'undefined' || !google.accounts) {
-                alert('⚠️ La librería de Google aún no cargó. Espera un momento e intenta de nuevo.');
-                return;
-            }
-            localStorage.setItem('sheets_client_id', clientId);
-            sheetsTokenClient = google.accounts.oauth2.initTokenClient({
-                client_id: clientId,
-                scope: 'https://www.googleapis.com/auth/spreadsheets',
-                callback: (response) => {
-                    if (response.error) {
-                        alert('❌ Error de autenticación: ' + response.error);
-                        return;
-                    }
-                    googleAccessToken = response.access_token;
-                    refreshSheetsUI();
-                    if (pendingSheetsAction) {
-                        const action = pendingSheetsAction;
-                        pendingSheetsAction = null;
-                        action();
-                    }
-                }
-            });
-            sheetsTokenClient.requestAccessToken({ prompt: 'consent' });
-        }
-
-        function disconnectSheets() {
-            if (googleAccessToken && typeof google !== 'undefined') {
-                google.accounts.oauth2.revoke(googleAccessToken);
-            }
-            googleAccessToken = null;
-            sheetsTokenClient = null;
+        function saveSheetsCfg() {
+            const apiKey = document.getElementById('sheetsApiKey').value.trim();
+            const scriptUrl = document.getElementById('sheetsScriptUrl').value.trim();
+            const sheetName = document.getElementById('sheetsSheetName').value.trim() || 'Ideas';
+            if (!apiKey) { alert('⚠️ La API Key es obligatoria para leer el sheet'); return; }
+            localStorage.setItem('ideas_sheets_apikey', apiKey);
+            if (scriptUrl) localStorage.setItem('ideas_sheets_script', scriptUrl);
+            localStorage.setItem('ideas_sheets_name', sheetName);
             refreshSheetsUI();
         }
 
@@ -2143,64 +2155,83 @@ Formato JSON obligatorio:
             el.textContent = msg;
         }
 
-        function setSheetsButtonsDisabled(disabled) {
-            ['sheetsUploadBtn', 'sheetsDownloadBtn', 'sheetsSyncBtn'].forEach(id => {
-                document.getElementById(id).disabled = disabled;
-            });
+        // ---- SUBIR ideas → Apps Script (form POST via iframe, sin CORS) ----
+        function sheetsUpload() {
+            if (!hasSheetsScript()) { alert('⚠️ Configura la URL del Apps Script para poder escribir'); return; }
+            const scriptUrl = localStorage.getItem('ideas_sheets_script');
+            const sheetName = localStorage.getItem('ideas_sheets_name') || 'Ideas';
+            const rows = ideas.map(idea => [
+                idea.id, idea.title, idea.description, idea.type, idea.priority,
+                idea.status,
+                idea.aiResults?.summary || '',
+                idea.aiResults?.viability?.score || '',
+                idea.aiResults?.analyzedAt || '',
+                idea.createdAt || '',
+                idea.updatedAt || ''
+            ]);
+            const payload = { sheetName, headers: HEADERS, rows };
+            const count = ideas.length;
+            showSheetsResult('⏳ Subiendo ' + count + ' ideas...');
+            document.getElementById('sheetsUploadBtn').disabled = true;
+
+            const iframeName = 'ideas_if_' + Date.now();
+            const iframe = document.createElement('iframe');
+            iframe.name = iframeName;
+            iframe.style.cssText = 'position:absolute;width:0;height:0;border:0;opacity:0;pointer-events:none';
+            document.body.appendChild(iframe);
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = scriptUrl;
+            form.target = iframeName;
+            form.style.display = 'none';
+            const input = document.createElement('input');
+            input.name = 'payload';
+            input.value = JSON.stringify(payload);
+            form.appendChild(input);
+            document.body.appendChild(form);
+
+            iframe.onload = function() {
+                showSheetsResult('✅ ' + count + ' ideas guardadas en Google Sheets');
+                document.getElementById('sheetsUploadBtn').disabled = false;
+                setTimeout(() => { try { iframe.remove(); form.remove(); } catch(x) {} }, 2000);
+            };
+            form.submit();
+            setTimeout(() => {
+                document.getElementById('sheetsUploadBtn').disabled = false;
+                try { iframe.remove(); form.remove(); } catch(x) {}
+            }, 12000);
         }
 
-        async function sheetsUpload() {
-            if (!googleAccessToken) { pendingSheetsAction = sheetsUpload; connectGoogleSheets(); return; }
-            setSheetsButtonsDisabled(true);
-            showSheetsResult('⏳ Subiendo ideas...');
-            const result = await googleSheetsSync.uploadIdeas(ideas, googleAccessToken);
-            setSheetsButtonsDisabled(false);
-            if (result.success) {
-                showSheetsResult('✅ ' + ideas.length + ' ideas guardadas en Google Sheets');
-            } else {
-                if (result.error && result.error.includes('401')) {
-                    googleAccessToken = null; refreshSheetsUI();
-                    alert('⚠️ Sesión expirada. Vuelve a conectar con Google.');
-                } else { showSheetsResult('❌ Error: ' + result.error, true); }
-            }
-        }
-
+        // ---- DESCARGAR ideas ← API Key (lectura pública) ----
         async function sheetsDownload() {
-            if (!googleAccessToken) { pendingSheetsAction = sheetsDownload; connectGoogleSheets(); return; }
-            setSheetsButtonsDisabled(true);
+            if (!hasSheetsApiKey()) { alert('⚠️ Configura la API Key primero'); return; }
+            const apiKey = localStorage.getItem('ideas_sheets_apikey');
+            const sheetName = localStorage.getItem('ideas_sheets_name') || 'Ideas';
+            document.getElementById('sheetsDownloadBtn').disabled = true;
             showSheetsResult('⏳ Descargando ideas...');
-            const result = await googleSheetsSync.downloadIdeas(googleAccessToken);
-            setSheetsButtonsDisabled(false);
-            if (result.success) {
-                ideas = result.ideas;
+            try {
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}/values/${encodeURIComponent(sheetName + '!A2:K10000')}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`;
+                const r = await fetch(url);
+                if (!r.ok) throw new Error('Error ' + r.status + ': ' + (await r.text()).slice(0, 200));
+                const data = await r.json();
+                const rows = data.values || [];
+                const imported = rows.filter(row => row[0] && row[1]).map(row => ({
+                    id: row[0], title: row[1], description: row[2] || '',
+                    type: row[3] || 'app', priority: row[4] || 'medium',
+                    status: row[5] || 'idea',
+                    aiResults: row[6] ? { summary: row[6], viability: { score: parseInt(row[7])||0, analysis:'' }, analyzedAt: row[8] || '' } : null,
+                    createdAt: row[9] || new Date().toISOString(),
+                    updatedAt: row[10] || ''
+                }));
+                ideas = imported;
                 localStorage.setItem('ideas', JSON.stringify(ideas));
                 renderIdeas(); updateDashboard();
                 showSheetsResult('✅ ' + ideas.length + ' ideas cargadas desde Google Sheets');
-            } else {
-                if (result.error && result.error.includes('401')) {
-                    googleAccessToken = null; refreshSheetsUI();
-                    alert('⚠️ Sesión expirada. Vuelve a conectar con Google.');
-                } else { showSheetsResult('❌ Error: ' + result.error, true); }
+            } catch(e) {
+                showSheetsResult('❌ Error: ' + e.message, true);
             }
-        }
-
-        async function sheetsSync() {
-            if (!googleAccessToken) { pendingSheetsAction = sheetsSync; connectGoogleSheets(); return; }
-            setSheetsButtonsDisabled(true);
-            showSheetsResult('⏳ Sincronizando...');
-            const result = await googleSheetsSync.syncIdeas(ideas, googleAccessToken);
-            setSheetsButtonsDisabled(false);
-            if (result.success) {
-                ideas = result.ideas;
-                localStorage.setItem('ideas', JSON.stringify(ideas));
-                renderIdeas(); updateDashboard();
-                showSheetsResult('✅ ' + result.message);
-            } else {
-                if (result.error && result.error.includes('401')) {
-                    googleAccessToken = null; refreshSheetsUI();
-                    alert('⚠️ Sesión expirada. Vuelve a conectar con Google.');
-                } else { showSheetsResult('❌ Error: ' + result.error, true); }
-            }
+            document.getElementById('sheetsDownloadBtn').disabled = false;
         }
     </script>
 </body>
