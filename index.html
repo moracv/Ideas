@@ -1685,7 +1685,7 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                                 }]
                             }],
                             generationConfig: {
-                                maxOutputTokens: 2500,
+                                maxOutputTokens: selectedModel === 'PRO' ? 8192 : 2500,
                                 temperature: 0.7
                             }
                         })
