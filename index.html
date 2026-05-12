@@ -20,7 +20,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27100%27%20height=%27100%2[...]
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20180%20180%27%3E%3Crect%20fill=%27%23006B7E%27%20width=%27180%27%20hei[...]
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js" onerror="this.onerror=null;this.src='https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js'"></script>
     <script src="./gemini-config.js"></script>
     <script src="./google-sheets-sync.js"></script>
     <script src="https://accounts.google.com/gsi/client" async></script>
@@ -1703,16 +1703,19 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                     throw new Error('No se recibió respuesta de Gemini');
                 }
 
-                // Parsear JSON con mejor extracción y limpieza
+                // Parsear JSON: eliminar markdown code fences y extraer JSON
                 let result;
                 let jsonStr = content.trim();
 
-                // Si no empieza con {, busca el primer { y último }
+                // Eliminar bloques ```json ... ``` o ``` ... ```
+                jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+
+                // Si aún no empieza con {, busca el primer { y último }
                 if (!jsonStr.startsWith('{')) {
                     const start = jsonStr.indexOf('{');
                     const end = jsonStr.lastIndexOf('}');
                     if (start === -1 || end === -1) {
-                        console.error('Respuesta de Gemini:', content);
+                        console.error('Respuesta de Gemini sin JSON:', content);
                         throw new Error('No se encontró JSON válido en la respuesta');
                     }
                     jsonStr = jsonStr.substring(start, end + 1);
@@ -1721,21 +1724,8 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                 try {
                     result = JSON.parse(jsonStr);
                 } catch (parseErr) {
-                    // Intenta limpiar caracteres problemáticos
-                    console.warn('Primer intento falló, intentando limpiar...');
-                    jsonStr = jsonStr
-                        .replace(/\n\s*\n/g, ' ')  // Reemplaza múltiples saltos de línea
-                        .replace(/\n\s*/g, ' ')    // Reemplaza saltos de línea con espacios
-                        .replace(/\r/g, '')        // Elimina retornos de carro
-                        .replace(/\t/g, ' ');      // Reemplaza tabs con espacios
-
-                    try {
-                        result = JSON.parse(jsonStr);
-                    } catch (parseErr2) {
-                        console.error('Error parseando JSON:', parseErr2.message);
-                        console.error('JSON limpiado:', jsonStr.substring(0, 500));
-                        throw new Error('JSON inválido: ' + parseErr2.message);
-                    }
+                    console.error('Error parseando JSON:', parseErr.message, jsonStr.substring(0, 300));
+                    throw new Error('Formato de respuesta inválido: ' + parseErr.message);
                 }
 
                 // Mostrar resultados
@@ -2236,11 +2226,23 @@ Devuelve SOLO este JSON (válido y sin comentarios):
             document.getElementById('sheetsDownloadBtn').disabled = true;
             showSheetsResult('⏳ Descargando ideas...');
             try {
-                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}/values/${encodeURIComponent(sheetName + '!A2:K10000')}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`;
+                const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEETS_ID}/values/${encodeURIComponent(sheetName + '!A:K')}?key=${apiKey}&valueRenderOption=FORMATTED_VALUE`;
+                console.log('Sheets URL:', url);
                 const r = await fetch(url);
-                if (!r.ok) throw new Error('Error ' + r.status + ': ' + (await r.text()).slice(0, 200));
+                if (!r.ok) {
+                    const errText = await r.text();
+                    console.error('Sheets error response:', errText);
+                    throw new Error('Error ' + r.status + ': ' + errText.slice(0, 300));
+                }
                 const data = await r.json();
-                const rows = data.values || [];
+                console.log('Sheets respuesta:', data);
+                const rows = (data.values || []).slice(1); // omite fila de encabezados
+                console.log('Filas de datos:', rows.length);
+                if (rows.length === 0) {
+                    showSheetsResult('⚠️ La hoja "' + sheetName + '" está vacía o no tiene datos en las filas esperadas', true);
+                    document.getElementById('sheetsDownloadBtn').disabled = false;
+                    return;
+                }
                 const imported = rows.filter(row => row[0] && row[1]).map(row => ({
                     id: row[0], title: row[1], description: row[2] || '',
                     type: row[3] || 'app', priority: row[4] || 'medium',
@@ -2254,6 +2256,7 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                 renderIdeas(); updateDashboard();
                 showSheetsResult('✅ ' + ideas.length + ' ideas cargadas desde Google Sheets');
             } catch(e) {
+                console.error('Sheets download error:', e);
                 showSheetsResult('❌ Error: ' + e.message, true);
             }
             document.getElementById('sheetsDownloadBtn').disabled = false;
