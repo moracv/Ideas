@@ -1649,12 +1649,15 @@ Descripción: ${idea.description}
 Prioridad: ${idea.priority}
 Estado: ${idea.status}
 
-Por favor, proporciona una respuesta estructurada en JSON con:
+IMPORTANTE: Debes responder ÚNICAMENTE con un objeto JSON válido, sin texto adicional.
+Las comillas internas en strings deben escaparse con backslash.
+
+Proporciona:
 1. Un resumen ejecutivo (2-3 párrafos)
 2. Un análisis de viabilidad detallado (considerando el tipo de idea, con un porcentaje 0-100)
 3. 3-4 insights clave con iconos sugeridos para cada uno
 
-Formato JSON obligatorio:
+Devuelve SOLO este JSON (válido y sin comentarios):
 {
   "summary": "Resumen ejecutivo detallado...",
   "viability": {
@@ -1700,17 +1703,27 @@ Formato JSON obligatorio:
                     throw new Error('No se recibió respuesta de Gemini');
                 }
 
-                // Parsear JSON - primero intenta todo, luego busca dentro del texto
+                // Parsear JSON con mejor extracción
                 let result;
-                try {
-                    result = JSON.parse(content);
-                } catch {
-                    // Busca JSON dentro del texto
-                    const jsonMatch = content.match(/\{[\s\S]*\}/);
-                    if (!jsonMatch) {
-                        throw new Error('Respuesta en formato inválido');
+                let jsonStr = content.trim();
+
+                // Si no empieza con {, busca el primer { y último }
+                if (!jsonStr.startsWith('{')) {
+                    const start = jsonStr.indexOf('{');
+                    const end = jsonStr.lastIndexOf('}');
+                    if (start === -1 || end === -1) {
+                        console.error('Respuesta de Gemini:', content);
+                        throw new Error('No se encontró JSON válido en la respuesta');
                     }
-                    result = JSON.parse(jsonMatch[0]);
+                    jsonStr = jsonStr.substring(start, end + 1);
+                }
+
+                try {
+                    result = JSON.parse(jsonStr);
+                } catch (parseErr) {
+                    console.error('Error parseando JSON:', parseErr.message);
+                    console.error('JSON string:', jsonStr.substring(0, 500));
+                    throw new Error('JSON inválido: ' + parseErr.message);
                 }
 
                 // Mostrar resultados
