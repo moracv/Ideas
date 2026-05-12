@@ -513,6 +513,17 @@
             height: 300px;
         }
 
+        .chart-empty {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-light);
+            font-size: 0.95em;
+            opacity: 0.7;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -941,14 +952,16 @@
         <div class="charts-grid">
             <div class="card">
                 <h2>Distribucion por Tipo</h2>
-                <div class="chart-container">
+                <div class="chart-container" style="position:relative;">
                     <canvas id="typeChart"></canvas>
+                    <div id="typeChartEmpty" class="chart-empty" style="display:none;">Sin ideas registradas</div>
                 </div>
             </div>
             <div class="card">
                 <h2>Distribucion por Estado</h2>
-                <div class="chart-container">
+                <div class="chart-container" style="position:relative;">
                     <canvas id="statusChart"></canvas>
+                    <div id="statusChartEmpty" class="chart-empty" style="display:none;">Sin ideas registradas</div>
                 </div>
             </div>
         </div>
@@ -1080,7 +1093,7 @@
             <div id="aiControlsContainer" style="display: none;">
                 <div class="model-selector">
                     <button class="model-btn active" data-model="FLASH_LITE" onclick="selectModel('FLASH_LITE')">
-                        ⚡ Gemini 3.1 Flash Lite (Rápido)
+                        ⚡ Gemini 2.0 Flash Lite (Rápido)
                     </button>
                     <button class="model-btn" data-model="PRO" onclick="selectModel('PRO')">
                         🚀 Gemini 2.5 Pro (Potente)
@@ -1984,6 +1997,39 @@ Formato JSON obligatorio:
             updateCharts();
         }
 
+        function renderChart(canvasId, emptyId, chartKey, labels, data, colors) {
+            const ctx = document.getElementById(canvasId);
+            const emptyEl = document.getElementById(emptyId);
+            if (charts[chartKey]) {
+                charts[chartKey].destroy();
+                charts[chartKey] = null;
+            }
+            if (data.length === 0) {
+                ctx.style.display = 'none';
+                emptyEl.style.display = '';
+                return;
+            }
+            ctx.style.display = '';
+            emptyEl.style.display = 'none';
+            charts[chartKey] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: colors,
+                        borderColor: 'white',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
         function updateCharts() {
             if (typeof Chart === 'undefined') {
                 console.info('Chart.js no esta disponible; se omite la renderizacion de graficas.');
@@ -1992,75 +2038,24 @@ Formato JSON obligatorio:
 
             const types = {};
             const statuses = {};
-
             ideas.forEach(idea => {
                 types[idea.type] = (types[idea.type] || 0) + 1;
                 statuses[idea.status] = (statuses[idea.status] || 0) + 1;
             });
 
-            // Type Chart
-            if (charts.type) {
-                charts.type.destroy();
-            }
-            const typeCtx = document.getElementById('typeChart');
-            charts.type = new Chart(typeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(types).map(t => typeNames[t] || t),
-                    datasets: [{
-                        data: Object.values(types),
-                        backgroundColor: [
-                            'rgba(0, 107, 126, 0.7)',
-                            'rgba(91, 79, 139, 0.7)',
-                            'rgba(107, 138, 148, 0.7)',
-                            'rgba(122, 122, 122, 0.7)'
-                        ],
-                        borderColor: 'white',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
+            renderChart(
+                'typeChart', 'typeChartEmpty', 'type',
+                Object.keys(types).map(t => typeNames[t] || t),
+                Object.values(types),
+                ['rgba(0,107,126,0.7)', 'rgba(91,79,139,0.7)', 'rgba(107,138,148,0.7)', 'rgba(122,122,122,0.7)']
+            );
 
-            // Status Chart
-            if (charts.status) {
-                charts.status.destroy();
-            }
-            const statusCtx = document.getElementById('statusChart');
-            charts.status = new Chart(statusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(statuses),
-                    datasets: [{
-                        data: Object.values(statuses),
-                        backgroundColor: [
-                            'rgba(16, 185, 129, 0.7)',
-                            'rgba(245, 158, 11, 0.7)',
-                            'rgba(239, 68, 68, 0.7)',
-                            'rgba(100, 116, 139, 0.7)'
-                        ],
-                        borderColor: 'white',
-                        borderWidth: 2
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
+            renderChart(
+                'statusChart', 'statusChartEmpty', 'status',
+                Object.keys(statuses),
+                Object.values(statuses),
+                ['rgba(16,185,129,0.7)', 'rgba(245,158,11,0.7)', 'rgba(239,68,68,0.7)', 'rgba(100,116,139,0.7)']
+            );
         }
 
         function checkMicrophonePermission() {
