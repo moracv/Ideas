@@ -9,7 +9,7 @@ class GeminiConfig {
         this.API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
         this.MODELS = {
             PRO: 'gemini-2.5-pro',
-            FLASH_LITE: 'gemini-2.0-flash'
+            FLASH_LITE: 'gemini-2.5-flash'
         };
         this.config = this.loadConfig();
     }
