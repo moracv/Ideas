@@ -1554,7 +1554,8 @@
                 return;
             }
 
-            const idea = ideas.find(i => i.id === ideaId);
+            // Convertir a string para comparar (ideas locales son number, importadas son string)
+            const idea = ideas.find(i => String(i.id) === String(ideaId));
             if (!idea) return;
 
             selectedIdeaId = idea.id;
@@ -1630,7 +1631,7 @@
                 return;
             }
 
-            const idea = ideas.find(i => i.id === selectedIdeaId);
+            const idea = ideas.find(i => String(i.id) === String(selectedIdeaId));
             if (!idea) {
                 alert('⚠️ No se encontró la idea seleccionada');
                 return;
@@ -1798,7 +1799,7 @@ Devuelve SOLO este JSON (válido y sin comentarios):
 
         // ==================== EDIT IDEA ====================
         function openEditIdeaModal(ideaId) {
-            const idea = ideas.find(i => i.id === ideaId);
+            const idea = ideas.find(i => String(i.id) === String(ideaId));
             if (!idea) return;
 
             editingIdeaId = idea.id;
@@ -1819,7 +1820,7 @@ Devuelve SOLO este JSON (válido y sin comentarios):
         document.getElementById('editIdeaForm')?.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const idea = ideas.find(i => i.id === editingIdeaId);
+            const idea = ideas.find(i => String(i.id) === String(editingIdeaId));
             if (!idea) return;
 
             idea.title = document.getElementById('editIdeaTitle').value;
@@ -2018,11 +2019,11 @@ Devuelve SOLO este JSON (válido y sin comentarios):
 
         function deleteIdea(ideaId) {
             if (confirm('¿Eliminar esta idea?')) {
-                ideas = ideas.filter(i => i.id !== ideaId);
+                ideas = ideas.filter(i => String(i.id) !== String(ideaId));
                 localStorage.setItem('ideas', JSON.stringify(ideas));
                 renderIdeas();
                 updateDashboard();
-                if (selectedIdeaId === ideaId) {
+                if (String(selectedIdeaId) === String(ideaId)) {
                     deselectIdea();
                 }
             }
