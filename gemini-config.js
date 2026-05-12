@@ -8,7 +8,7 @@ class GeminiConfig {
         this.STORAGE_KEY = 'gemini_config';
         this.API_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models';
         this.MODELS = {
-            PRO: 'gemini-2.5-pro-exp-05052425',
+            PRO: 'gemini-2.5',
             FLASH_LITE: 'gemini-3.1-flash-lite'
         };
         this.config = this.loadConfig();
