@@ -1703,7 +1703,7 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                     throw new Error('No se recibió respuesta de Gemini');
                 }
 
-                // Parsear JSON con mejor extracción
+                // Parsear JSON con mejor extracción y limpieza
                 let result;
                 let jsonStr = content.trim();
 
@@ -1721,9 +1721,21 @@ Devuelve SOLO este JSON (válido y sin comentarios):
                 try {
                     result = JSON.parse(jsonStr);
                 } catch (parseErr) {
-                    console.error('Error parseando JSON:', parseErr.message);
-                    console.error('JSON string:', jsonStr.substring(0, 500));
-                    throw new Error('JSON inválido: ' + parseErr.message);
+                    // Intenta limpiar caracteres problemáticos
+                    console.warn('Primer intento falló, intentando limpiar...');
+                    jsonStr = jsonStr
+                        .replace(/\n\s*\n/g, ' ')  // Reemplaza múltiples saltos de línea
+                        .replace(/\n\s*/g, ' ')    // Reemplaza saltos de línea con espacios
+                        .replace(/\r/g, '')        // Elimina retornos de carro
+                        .replace(/\t/g, ' ');      // Reemplaza tabs con espacios
+
+                    try {
+                        result = JSON.parse(jsonStr);
+                    } catch (parseErr2) {
+                        console.error('Error parseando JSON:', parseErr2.message);
+                        console.error('JSON limpiado:', jsonStr.substring(0, 500));
+                        throw new Error('JSON inválido: ' + parseErr2.message);
+                    }
                 }
 
                 // Mostrar resultados
